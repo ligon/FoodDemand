@@ -1,0 +1,315 @@
+#+PROPERTY: header-args:python :results output raw  :noweb no-export :exports code
+
+* Introduction
+  Here we'll explore actual consumption decisions made by some very
+  poor households drawn from a set of villages in South India studied
+  by the International Crops Research Institute for the Semi-Arid
+  Tropics (ICRISAT) starting in the mid-seventies, and continuing
+  (irregularly) up to 2004.  Data are drawn from a sample of
+  households in each of six different villages.
+
+* Consumption Expenditures from Schedule L
+   We can collect detailed consumption expenditure items by examining
+   Schedule L, with its system of double-accounting.  Here the account
+   code for food is 71 ("including milk, sweets and spices"), and the
+   account code for "Narcotics, tea, coffee, tobacco, pan, alcoholic
+   beverages" is 72.  Other sorts of expenditures related to
+   consumption are in accounts 71--79, as follows:
+
+| Consumption Category                                                                                                                           | Acct |
+|------------------------------------------------------------------------------------------------------------------------------------------------+------|
+| Food (codes) including milk, sweets and spices                                                                                                 |   71 |
+| Narcotics, tea, coffee, tobacco, pan, alcoholic beverages                                                                                      |   72 |
+| Clothing, sewing of cloth, other tailoring expenses, thread, needles, chappals and other footwear (purchase and repair), etc., (no item codes) |   73 |
+| Medicines, cosmetics, soap, barber service (no item codes)                                                                                     |   74 |
+| Travel and entertainment, (no item codes)                                                                                                      |   75 |
+| Electricity, water charges and cooking fuels (like kerosene, match box) for household use, (no item codes)                                     |   76 |
+| Labor expenses for domestic work, (no item codes)                                                                                              |   77 |
+| Ceremonial expenses (including Kapur, Gulal, Agarbathi, etc.)                                                                                  |   78 |
+| Edible oils and fats (other than ghee) (no item code)                                                                                          |   79 |
+| Others, including complete meals in hotel, school and educational materials, stamps, stationery, grinding and milling charges etc.             |   70 |
+
+Different kinds of food and narcotics are coded according to
+[[food_codes]], along with account codes for those accounts that have no
+item codes.
+   
+   #+name: food_codes
+   | Food                                                          | Code |
+   |---------------------------------------------------------------+------|
+   | Bajra/Pearl millet (Local variety)                            | CA   |
+   | Bajra/Pearl millet (HYV)                                      | CB   |
+   | Jowar/Sorghum (Local variety)                                 | CC   |
+   | Jowar/Sorghum (HYV)                                           | CD   |
+   | Maize (Local variety)                                         | CE   |
+   | Maize (HYV)                                                   | CF   |
+   | Ragi/Finger millet                                            | CG   |
+   | Other minor millets                                           | CH   |
+   | Paddy (Local variety)                                         | CJ   |
+   | Paddy (HYV)                                                   | CK   |
+   | Wheat (Local variety)                                         | CL   |
+   | Wheat (HYV)                                                   | CM   |
+   | Rice (local variety)                                          | CN   |
+   | Rice (HYV variety)                                            | CP   |
+   | Meals                                                         | CQ   |
+   | Other cereals                                                 | CX   |
+   | Redgram (Tur)/Pigeonpea                                       | PA   |
+   | Greengram (Mung)                                              | PB   |
+   | Blackgram (Urad)                                              | PC   |
+   | Bengalgram (Chenna)/Chickpea                                  | PD   |
+   | Redgram dhal                                                  | PF   |
+   | Greengram dhal                                                | PG   |
+   | Blackgram dhal                                                | PH   |
+   | Bengalgram dhal                                               | PJ   |
+   | Guar                                                          | PK   |
+   | Cowpea                                                        | PL   |
+   | Soybean                                                       | PN   |
+   | Other pulses                                                  | PX   |
+   | Other dhal                                                    | PZ   |
+   | Groundnuts                                                    | BA   |
+   | Sesamum                                                       | BB   |
+   | Castor                                                        | BC   |
+   | Mustard                                                       | BD   |
+   | Linseed                                                       | BE   |
+   | Linseed Oil                                                   | BL   |
+   | Castor (HYV)                                                  | BM   |
+   | Sunflower                                                     | BF   |
+   | Safflower                                                     | BG   |
+   | Safflower oil                                                 | BS   |
+   | Groundnut oil                                                 | BH   |
+   | Other oilseeds                                                | BX   |
+   | Cotton (Local variety)                                        | DA   |
+   | Cotton (HYV)                                                  | DB   |
+   | Other Fiber crops                                             | DX   |
+   | Sugarcane                                                     | SA   |
+   | Sugar                                                         | SB   |
+   | Gur (jaggery)                                                 | ZG   |
+   | Other sugar products                                          | SX   |
+   | Onion                                                         | VA   |
+   | Chillies                                                      | VB   |
+   | Brinjal                                                       | VC   |
+   | Cabbage                                                       | VD   |
+   | Tomato                                                        | VE   |
+   | Cauliflower                                                   | VF   |
+   | Leafy vegetables                                              | VL   |
+   | Potato                                                        | VP   |
+   | Carrot and Radish                                             | VR   |
+   | Fennel                                                        | VS   |
+   | Tubers                                                        | VT   |
+   | Other vegetables                                              | VX   |
+   | Other spices                                                  | VY   |
+   | Grapes                                                        | FA   |
+   | Lemon                                                         | FB   |
+   | Orange                                                        | FC   |
+   | Mango                                                         | FD   |
+   | Coconut                                                       | FE   |
+   | Toddy Trees                                                   | FG   |
+   | Other Fruits                                                  | FX   |
+   | Banana                                                        | FH   |
+   | Papaya                                                        | FP   |
+   | Alcoholic beverages                                           | NA   |
+   | Coffee                                                        | NC   |
+   | Tea                                                           | NT   |
+   | Tobacco, beedi                                                | NN   |
+   | Pan, betel, etc.                                              | NP   |
+   | Others (Ganja, etc.)                                          | NZ   |
+   | Milk                                                          | AM   |
+   | Ghee                                                          | AG   |
+   | Other milk products like curd, etc.                           | AP   |
+   | Dung cakes                                                    | AC   |
+   | Dung, manure                                                  | AD   |
+   | Skin, hide, bones                                             | AS   |
+   | Wool, goat hair, etc.                                         | AW   |
+   | Eggs                                                          | AY   |
+   | Other animal products                                         | AX   |
+   | Fish                                                          | AF   |
+   | Bullocks                                                      | LA   |
+   | Cow                                                           | LB   |
+   | Young Cattle (under 3 years)                                  | LC   |
+   | He buffalo                                                    | LD   |
+   | She buffalo                                                   | LE   |
+   | Young buffalo (under 3 years)                                 | LF   |
+   | Horse                                                         | LG   |
+   | Donkey                                                        | LH   |
+   | Goat                                                          | LK   |
+   | Sheep                                                         | LM   |
+   | Pig                                                           | LP   |
+   | Poultry birds                                                 | LQ   |
+   | Other livestock                                               | LZ   |
+   | Medicine Doctor's fees                                        | NM   |
+   | Cosmetics tooth paste etc.                                    | NB   |
+   | Soap, washing powder                                          | NS   |
+   | Barber service (and material relating to it)                  | ND   |
+   | Other personal                                                | NZ   |
+   | Complete meals in hotel                                       | GM   |
+   | Educational expenses (fees)                                   | GS   |
+   | Educational material expenses (pen, books, paper, etc.)       | GE   |
+   | Grinding/milling charges                                      | GG   |
+   | Processed foods (e.g. biscuits Khara, syrup, baby food, etc.) | GP   |
+   | Other consumption                                             | GZ   |
+   | Other Food                                                    | 71   |
+   | Other Narcotics                                               | 72   |
+   | Clothing                                                      | 73   |
+   | Other Clothing                                                | QK   |
+   | Medicine, cosmetics, etc.                                     | 74   |
+   | Travel & Entertainment                                        | 75   |
+   | Utilities                                                     | 76   |
+   | Domestic labor                                                | 77   |
+   | Ceremonial expenses                                           | 78   |
+   | Edible oils                                                   | 79   |
+   | Other                                                         | 70   |
+
+** Column Specifications for Schedule L
+#+begin_src python :tangle l.py
+import pandas as pd
+from collections import OrderedDict
+
+Ldict =[('village', (2,3),  str),
+        ('landclas',(3,4),  int),
+        ('hhno',    (4,6),  int),
+        ('year',    (6,7),  int),
+        ('dayofint',(7,10), int),
+        ('accrec',  (10,12),int),
+        ('itmcode1',(12,14),str),
+        ('itmcode2',(14,15),str),
+        ('unit1',   (15,16),str),
+        ('gdsoutq', (16,22),int),
+        ('monvain', (22,28),float),
+        ('accpay',  (29,31),int),
+        ('itmcode3',(31,33),str),
+        ('itmcode4',(33,34),str),
+        ('unit2',   (34,35),str),
+        ('gdsinq',  (35,41),int),
+        ('monvaout',(41,48),float),
+        ('distance',(48,50),float),
+        ('partner', (50,51),str),
+        ('kincast', (51,53),str),
+        ('etc',     (53,57),str)]
+
+Ldict = OrderedDict(sorted([(s[0],((s[1][0]-1,s[1][1]-1),s[2])) for s in Ldict], key = lambda t: t[1][0][0]))
+Lcols = OrderedDict(sorted([(s[0],s[1][0]) for s in Ldict.items()], key = lambda t: t[1][0]))
+Ltypes = {k:v[1] for k,v in Ldict.items()}
+
+
+L = [pd.read_fwf('~/Data/VLS/MyVLS/VLS1/L/%s' % v,list(Lcols.values()),dtype=Ltypes) for v in ['aur','shi','kan']]
+
+L[0].columns = list(Ldict.keys())
+L[1].columns = list(Ldict.keys())
+L[2].columns = list(Ldict.keys())
+
+L = pd.concat(L)
+
+# Clean up some garbage in accpay column
+L.accpay = pd.to_numeric(L.accpay,errors='coerce')
+
+# Deal with  a few lowercase codes
+L.itmcode3 = L.itmcode3.str.upper()
+
+# Create unique household ID
+L['HHID'] = ['%s%d' % l for l in zip(L.village,L.hhno.fillna(0))]
+
+L.to_pickle('l.df')
+
+#+end_src
+
+#+results:
+
+#+begin_src python :var codes=food_codes :tangle expenditures.py
+import numpy as np
+import pandas as pd
+from cfe.df_utils import orgtbl_to_df
+
+L = pd.read_pickle('l.df')
+
+d = {v[1]:v[0] for v in codes}
+
+C = L.query('70 <= accpay < 80')[['village','HHID','year','accpay','itmcode3','unit2','gdsinq','monvaout']]
+
+# Replace Nans in itmcode3 with accpay number
+C.itmcode3.fillna(C.accpay,inplace=True)
+del C['accpay']
+
+# Clean up some non-numeric garbage
+C.monvaout = C.monvaout.astype(float)
+
+X = C.groupby(['village','year','HHID','itmcode3'])['monvaout'].sum()
+
+# Fix year indicators
+X.rename({0.:80,1:81,2:82,3:83,4:84,5:75,6:76,7:77,8:78,9:79},level='year',inplace=True)
+
+X = X.unstack('itmcode3').rename(columns=d)
+
+y = np.log(X)
+y.to_pickle('y.df')
+
+#+end_src
+
+#+results:
+
+* Demographics from Schedule C
+#+begin_src python :tangle c.py
+import numpy as np
+import pandas as pd
+from collections import OrderedDict
+
+r0 = pd.read_csv('~/Data/VLS/MyVLS/VLS1/Chicago/sc.raw',delimiter="\s+",
+                 header=None,skiprows=filter(lambda x: x % 6 != 0,range(81924)),
+                 names=['village','class','hhno','year','dayofint','member','rltohd'])
+
+r1 = pd.read_csv('~/Data/VLS/MyVLS/VLS1/Chicago/sc.raw',delimiter="\s+",
+                 header=None,skiprows=filter(lambda x: x % 6 != 1,range(81924)),
+                 names=['sex','age','marst','educ','yrended','mocc','socc'])
+
+C = pd.concat([r0,r1],axis=1)
+
+# Create unique household ID
+C.village.replace(to_replace={1:'A',2:'B',3:'C',4:'D',5:'E',6:'F'},inplace=True)
+C.sex.replace(to_replace={6:'F',13:'M'},inplace=True)
+
+C['HHID'] = ['%s%d' % l for l in zip(C.village,C.hhno.fillna(0))]
+del C['hhno']
+
+C['Men'] = (C['sex']=='M') & (C['age'] >= 16)
+C['Women'] = (C['sex']=='F') & (C['age'] >= 16)
+
+C['Boys'] = (C['sex']=='M') & (C['age'] < 16)
+C['Girls'] = (C['sex']=='F') & (C['age'] < 16)
+
+C.to_pickle('c.df')
+
+z = C.groupby(['village','year','HHID'])[['Men','Women','Boys','Girls']].sum()
+z['log Hsize'] = np.log(z.sum(axis=1))
+
+z.to_pickle('z.df')
+
+#+end_src
+
+* Estimating Demands
+#+begin_src python
+  import pandas as pd
+  import cfe
+
+  z = pd.read_pickle('z.df')
+  z.index.names = ['m','t','j']
+  z = z.reorder_levels(['j','t','m'])
+
+  y = pd.read_pickle('y.df')
+  y.index.names = ['m','t','j']
+  y = y.reorder_levels(['j','t','m'])
+
+  y = y.to_xarray().to_array('i')
+  z = z.to_xarray().to_array('k')
+
+  result = cfe.Result(y=y,z=z,min_proportion_items=0.10)
+
+  result.get_predicted_log_expenditures()
+  result.get_loglambdas()
+
+#+end_src
+
+
+
+
+
+
+
+
