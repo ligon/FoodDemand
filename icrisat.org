@@ -222,16 +222,16 @@ L = pd.read_pickle('l.df')
 
 d = {v[1]:v[0] for v in codes}
 
-C = L.query('70 <= accpay < 80')[['village','HHID','year','accpay','itmcode3','unit2','gdsinq','monvaout']]
+Consumption = L.query('70 <= accpay < 80')[['village','HHID','year','accpay','itmcode3','unit2','gdsinq','monvaout']]
 
 # Replace Nans in itmcode3 with accpay number
-C.itmcode3.fillna(C.accpay,inplace=True)
-del C['accpay']
+Consumption.itmcode3.fillna(Consumption.accpay,inplace=True)
+del Consumption['accpay']
 
 # Clean up some non-numeric garbage
-C.monvaout = C.monvaout.astype(float)
+Consumption.monvaout = Consumption.monvaout.astype(float)
 
-X = C.groupby(['village','year','HHID','itmcode3'])['monvaout'].sum()
+X = Consumption.groupby(['village','year','HHID','itmcode3'])['monvaout'].sum()
 
 # Fix year indicators
 X.rename({0.:80,1:81,2:82,3:83,4:84,5:75,6:76,7:77,8:78,9:79},level='year',inplace=True)
@@ -283,8 +283,10 @@ z.to_pickle('z.df')
 
 #+end_src
 
+#+results:
+
 * Estimating Demands
-#+begin_src python
+#+begin_src python 
   import pandas as pd
   import cfe
 
@@ -299,12 +301,42 @@ z.to_pickle('z.df')
   y = y.to_xarray().to_array('i')
   z = z.to_xarray().to_array('k')
 
-  result = cfe.Result(y=y,z=z,min_proportion_items=0.10)
+  result = cfe.Result(y=y,z=z)
 
   result.get_predicted_log_expenditures()
   result.get_loglambdas()
 
+  print(cfe.df_utils.df_to_orgtbl(result.beta.to_dataframe()))
 #+end_src
+
+#+results:
+|                                                         |  beta |
+|---------------------------------------------------------+-------|
+| Bengalgram dhal                                         | 0.632 |
+| Ceremonial expenses                                     | 1.292 |
+| Chillies                                                | 0.133 |
+| Clothing                                                | 0.616 |
+| Coconut                                                 | 0.464 |
+| Complete meals in hotel                                 | 0.375 |
+| Cosmetics tooth paste etc.                              | 0.603 |
+| Educational material expenses (pen, books, paper, etc.) | 0.747 |
+| Grinding/milling charges                                | 0.372 |
+| Gur (jaggery)                                           | 0.604 |
+| Jowar/Sorghum (Local variety)                           | 0.283 |
+| Medicine Doctor's fees                                  | 0.570 |
+| Milk                                                    | 0.908 |
+| Onion                                                   | 0.353 |
+| Other spices                                            | 0.437 |
+| Other vegetables                                        | 0.482 |
+| Pan, betel, etc.                                        | 0.670 |
+| Redgram dhal                                            | 0.842 |
+| Soap, washing powder                                    | 0.850 |
+| Sugar                                                   | 0.856 |
+| Tea                                                     | 0.584 |
+| Tobacco, beedi                                          | 0.272 |
+| Travel & Entertainment                                  | 0.795 |
+| Utilities                                               | 0.387 |
+
 
 
 
