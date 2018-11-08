@@ -1,0 +1,413 @@
+#+PROPERTY: header-args:python :results output raw  :noweb no-export :exports code
+#+LATEX_HEADER: \newcommand{\R}{\ensuremath{\mathbb{R}}}
+
+** Consumer Demand for Food
+   - Minimum cost model can be regarded as /prescriptive/ or
+     /descriptive/.  In the former case it's a way of saying what
+     people /should/ eat.  In the latter it's a way of saying what
+     people /do/ eat. 
+**** Questions 
+     1. How could we evaluate the quality of the minimum cost diet as
+        a /prescription/?  What data or evidence might we gather?
+     2. How might we evaluate the quality of the minimum cost diet as
+        a /description/ of actual behavior?  What data or evidence
+        might we gather?
+     3. Perhaps the model works as description for some populations
+        better than others.  For what populations might the minimum
+        cost diet plan serve well?
+
+*** Consumer's problem
+    The basic consumer's problem considers the problem of allocating a
+    budget $x$ to purchase consumption goods (including but not
+    limited to different kinds of food).  The consumer is thought to
+    try to choose goods to maximize their /utility/.  Utility in turn
+    is a function that maps /consumption bundles/ into the  real
+    line---one can think of the level of utility as corresponding to
+    the consumer's happiness or satisfaction.
+
+    The problem is expressed mathematically as
+    \[
+       \max_{c\in\R^n_{++}} U(c) \qquad\text{such that $p'c\leq x$,}
+    \]
+    where $U:\R^n_{++}\rightarrow\R$ is generally assumed to be an
+    increasing, concave, and continuously differentiable function of
+    consumption; $c$ is the consumption bundle; $p$ is a vector of
+    prices for the various goods in $c$; and $x$ is the consumer's
+    total budget.
+
+***** Questions
+      1. How is the minimum cost diet problem related to the
+         consumer's problem?  What is the relevant commodity space?
+      2. Is it possible to reframe the minimum cost diet problem in
+         the form of the consumer's problem, or are there fundamental
+         differences? 
+
+**** Cobb-Douglas Example Utility Function
+
+    Let's consider a particular utility function which  takes the
+    form
+    \[
+       U(c) = \sum_{i=1}^n\alpha_i\log c_i.
+    \]
+    This logarithmic form is sometimes called a /Cobb-Douglas/
+    utility function, named after a mathematician Charles Cobb and an
+    economist (later Senator) Paul Douglas, who devised the
+    mathematical form as a way of modeling [[https://en.wikipedia.org/wiki/Cobb%25E2%2580%2593Douglas_production_function][production]].  
+
+#+begin_src python :tangle cobb_douglas.py
+from cfe import demands
+
+# Cobb-Douglas utility is a special case of a more general class
+def cobb_douglas_utility(alpha):
+    """
+    Define Cobb-Douglas utility function.
+    """
+    n = len(alpha)
+    U = lambda c: demands.utility(c,alpha,[1]*n,[0]*n)
+
+    return U
+
+# Three good case:
+alpha=[0.3,0.7] # Preference parameters
+
+U = cobb_douglas_utility(alpha)
+#+end_src
+
+#+results:
+
+Now construct a 3-d plot of the utility function for us to visualize:
+#+begin_src python :tangle cobb_douglas.py
+from mpl_toolkits import mplot3d
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Uncomment for use in Jupyter Notebook
+%matplotlib widget
+
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+
+# Commodity space
+c1 = np.linspace(0.1, 10, 30)
+c2 = np.linspace(0.1, 10, 30)
+
+C1,C2 = np.meshgrid(c1,c2)
+
+Utils = np.array([[U([c_1,c_2]) for c_1 in c1] for c_2 in c2])
+
+ax.plot_surface(C1, C2, Utils, rstride=1, cstride=1,
+                cmap='viridis', edgecolor='none',alpha=0.8)
+
+ax.set_xlabel('$c_1$')
+ax.set_ylabel('$c_2$')
+ax.set_zlabel('Utility')
+
+# Plot indifference curves
+ax.contour(C1,C2,Utils,offset=Utils.min())
+ax.contour(C1,C2,Utils, colors="k", linestyles="solid")
+
+plt.show()
+#+end_src
+
+#+results:
+
+
+
+***** Questions
+      Some questions covering basic consumer demand that should be
+      familiar.  If not, consult a textbook on intermediate
+      microeconomics (such as [[https://www.amazon.com/Microeconomics-Applications-Calculus-Pearson-Economics/dp/0134167384][Perloff's textbook with calculus]]).  Or
+      for a concise high-level treatment see the excellent (and free!)
+      [[http://www2.econ.iastate.edu/faculty/hallam/Microeconomics/Intro-Micro.pdf][Introduction by Arne Hallam]].
+
+      1. Economists would call the $(c_1,c_2)$ plane the "commodity
+         space".  Explain.
+      2. The contour lines in the figure are called "Indifference
+         curves".  Why is this sensible?
+      3. Economists call the partial derivatives of the utility function with respect to
+         $c_1$ and $c_2$ /marginal utilities/.  Give a graphical
+         interpretation of the marginal utility of $c_1$ (holding
+         $c_2$ fixed).
+      4. Pick out a point on an indifference curve.  What is its slope
+         in the $(c_1,c_2)$ plane?
+      5. Economists call (minus) the slope in the previous question
+         the consumer's /marginal rate of substitution/.  Explain.
+
+***** The Budget Constraint
+
+ Now, how about  the budget constraint?
+ #+begin_src python
+ import numpy as np
+ from mpl_toolkits.mplot3d import Axes3D
+ from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
+ import matplotlib.pyplot as plt
+
+ # Prices of goods
+ p = (1,2)
+
+ # Budget
+ x=2
+
+ c1 = np.linspace(0.1, x/p[0]*1.2, 30)
+ c2 = np.linspace(0.1, x/p[1]*1.2, 30)
+
+ C1,C2 = np.meshgrid(c1,c2)
+
+ Utils = np.array([[U([c_1,c_2]) for c_1 in c1] for c_2 in c2])
+
+ Ustar =  demands.marshallian.indirect_utility(x,p,alpha,1,0)
+
+ fig = plt.figure()
+ ax = plt.axes(projection='3d')
+
+ ax.set_xlabel('$c_1$')
+ ax.set_ylabel('$c_2$')
+ ax.set_zlabel('Utility')
+
+ # Plot indifference curves
+ ax.contour(C1,C2,Utils,offset=Utils.min())
+ ax.contour(C1,C2,Utils, colors="k", linestyles="solid")
+ ax.contour(C1,C2,Utils, colors="k", linestyles="solid",levels=[Ustar])
+
+ xs = [0,0,x/p[0],x/p[0]]
+ ys = [x/p[1],x/p[1],0,0]
+ zs = [Utils.min(),Utils.max()*1.1,Utils.max()*1.1,Utils.min()]
+
+ tuples = list(zip(xs,ys,zs))
+
+ vertices = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]]
+
+ poly3d = [[tuples[vertices[ix][iy]] for iy in range(len(vertices[0]))] for ix in range(len(vertices))]
+
+ faces = Poly3DCollection(poly3d, facecolors='k', linewidths=1, alpha=1)
+ #faces.set_facecolor((0,0,1,0.1))
+
+ ax.scatter(xs,ys,zs,s=0.001)
+ ax.add_collection3d(faces)
+
+ ax.plot_surface(C1, C2, Utils, rstride=1, cstride=1,
+                 cmap='viridis', edgecolor='none',alpha=0.8)
+
+ ax.view_init(elev=89,azim=269.9)
+ plt.show()
+ #+end_src
+
+ The budget constraint here is the black line/form.  
+
+
+****** Questions
+    1. How is the budget constraint determined by prices $p$ and budget $x$?
+    2. The figure above shows a tangency between the budget line and a
+       particular indifference curve.  Show that this point "solves"
+       the consumer's problem, in the sense that it maximizes utility
+       subject to the consumer's budget constraint.
+
+***** Demands
+
+ We've seen how one can find demands given a utility function and a
+ budget constraint.  As one varies the price of a particular good
+ (given a fixed budget and holding other prices fixed) one traces out
+ the /demand curve/ for the good.
+
+ The following code does this for the same utility function we explored
+ above.  Note that for obscure historical reasons it's conventional to
+ plot the independent variable "price" on the vertical axis, instead of
+ the  horizontal.
+
+ #+begin_src python
+ from cfe.demands import marshallian
+ import numpy as np
+ import matplotlib.pyplot as plt
+
+ alpha=[0.3,0.7] # Preference parameters
+
+ # Demand for c_1 as a function of own price
+ D1 = lambda p1,p2=1,x=1: marshallian.demands(x,(p1,p2),alpha,1,0)[0]
+
+ P = np.linspace(.5,5,20)
+
+ plt.plot([D1(p1) for p1 in P],P)
+ plt.xlabel('$c_1$')
+ plt.ylabel('$p_1$')
+
+ plt.show()
+ #+end_src
+
+ #+results:
+
+****** Questions
+       1. How does the demand curve for $c_1$ change if the price of
+          the other good changes?
+       2. How does the demand curve for $c_1$ change if the budget $x$
+          changes?
+
+***** Engel Curves
+      The "demand curve" traces out how demand for a good changes as
+      its price changes.  If prices remain fixed and the consumer's
+      /budget/ increases this describes what we call an [[https://en.wikipedia.org/wiki/Ernst_Engel][Engel]] curve.
+
+ #+begin_src python
+ from cfe.demands import marshallian
+ import numpy as np
+ import matplotlib.pyplot as plt
+
+ alpha=[0.3,0.7] # Preference parameters
+
+ # Demand for c_1 as a function of own price
+ E1 = lambda x,p1=1,p2=1: marshallian.demands(x,(p1,p2),alpha,1,0)
+
+ X = np.linspace(.1,10,20)
+
+ plt.plot(X,[E1(x)[0] for x in X],X,[E1(x)[1] for x in X])
+ plt.xlabel('$x$')
+ plt.ylabel('Consumptions')
+ plt.legend(('$c_1$','$c_2$'))
+ plt.title('Engel Curves')
+
+ plt.show()
+ #+end_src
+
+ #+results:
+
+****** Questions
+       1. How do the Engel curves depend on prices?
+       2. In the Cobb-Douglas case the parameters $\alpha_i$ are
+          sometimes called "budget shares."  Why does this makes
+          sense?
+
+**** Constant Frisch Elasticity (CFE) Example Utility Function
+    The Cobb-Douglas utility function is a special case of a more
+    general class of utility functions.  These allow different
+    curvatures in the utility derived from each good, unlike the
+    Cobb-Douglas case.  They take the form
+    \[
+       U(c) =
+    \sum_{i=1}^n\alpha_i\frac{\beta_i}{\beta_i-1}(c_i^{1-1/\beta_i} -1).
+    \]
+    Thus, where the Cobb-Douglas case had an \(n\)-vector of
+    parameters $\alpha$, the CFE case has two \(n\)-vectors, \alpha
+    and \beta.
+
+#+begin_src python 
+from cfe import demands
+
+########### Play with these parameters
+alpha=[0.3,0.7] # Preference parameters
+beta=[1.5,0.5] # Curvature parameters
+
+####################
+
+U = lambda c: demands.utility(c,alpha,beta,0)
+#+end_src
+
+#+results:
+
+Now construct a 3-d plot of the utility function for us to visualize:
+#+begin_src python 
+from mpl_toolkits import mplot3d
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Uncomment for use in Jupyter Notebook
+%matplotlib widget
+
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+
+# Commodity space
+c1 = np.linspace(0.1, 10, 30)
+c2 = np.linspace(0.1, 10, 30)
+
+C1,C2 = np.meshgrid(c1,c2)
+
+Utils = np.array([[U([c_1,c_2]) for c_1 in c1] for c_2 in c2])
+
+ax.plot_surface(C1, C2, Utils, rstride=1, cstride=1,
+                cmap='viridis', edgecolor='none',alpha=0.8)
+
+ax.set_xlabel('$c_1$')
+ax.set_ylabel('$c_2$')
+ax.set_zlabel('Utility')
+
+# Plot indifference curves
+ax.contour(C1,C2,Utils,offset=Utils.min())
+ax.contour(C1,C2,Utils, colors="k", linestyles="solid")
+
+plt.show()
+#+end_src
+
+#+results:
+
+
+
+***** Questions
+
+***** Demands
+
+ We've seen how one can find demands given a utility function and a
+ budget constraint.  As one varies the price of a particular good
+ (given a fixed budget and holding other prices fixed) one traces out
+ the /demand curve/ for the good.
+
+ The following code does this for the same utility function we explored
+ above.  Note that for obscure historical reasons it's conventional to
+ plot the independent variable "price" on the vertical axis, instead of
+ the  horizontal.
+
+ #+begin_src python
+ from cfe.demands import marshallian
+ import numpy as np
+ import matplotlib.pyplot as plt
+
+ # Demand for c_1 as a function of own price
+ D1 = lambda p1,p2=1,x=1: marshallian.demands(x,(p1,p2),alpha,beta,0)[0]
+
+ P = np.linspace(.5,5,20)
+
+ fig,ax = plt.subplots()
+
+ ax.plot([D1(p1) for p1 in P],P)
+ ax.set_xlabel('$c_1$')
+ ax.set_ylabel('$p_1$')
+
+ plt.show()
+ #+end_src
+
+ #+results:
+
+****** Questions
+       1. How does the demand curve for $c_1$ change if the price of
+          the other good changes?
+       2. How does the demand curve for $c_1$ change if the budget $x$
+          changes?
+
+***** Engel Curves
+      The "demand curve" traces out how demand for a good changes as
+      its price changes.  If prices remain fixed and the consumer's
+      /budget/ increases this describes what we call an [[https://en.wikipedia.org/wiki/Ernst_Engel][Engel]] curve.
+
+ #+begin_src python
+ from cfe.demands import marshallian
+ import numpy as np
+ import matplotlib.pyplot as plt
+
+ # Demand for c_1 as a function of own price
+ E1 = lambda x,p1=1,p2=1: marshallian.demands(x,(p1,p2),alpha,beta,0)
+
+ X = np.linspace(.1,10,20)
+
+ fig,ax = plt.subplots()
+
+ ax.plot(X,[E1(x)[0] for x in X],X,[E1(x)[1] for x in X])
+ ax.set_xlabel('$x$')
+ ax.set_ylabel('Consumptions')
+ ax.legend(('$c_1$','$c_2$'))
+ ax.set_title('Engel Curves')
+
+ plt.show()
+ #+end_src
+
+ #+results:
+
+****** Questions
+       1. How do the Engel curves depend on prices?
