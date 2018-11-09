@@ -3,8 +3,7 @@
 
 * Preface
 #+begin_src python
-!pip install ipywidgets
-!pip install CFEDemands
+!pip install -r requirements.txt
 #+end_src
 * Consumer Demand for Food
   - Minimum cost model can be regarded as /prescriptive/ or
@@ -345,8 +344,6 @@ plt.show()
 
 
 
-**** Questions
-
 **** Demands
 
 We've seen how one can find demands given a utility function and a
@@ -371,7 +368,10 @@ P = np.linspace(.5,5,20)
 
 fig,ax = plt.subplots()
 
-ax.plot([D1(p1) for p1 in P],P)
+
+#### Play with  p2 & x below!
+ax.plot([D1(p1,p2=1,x=1) for p1 in P],P)
+
 ax.set_xlabel('$c_1$')
 ax.set_ylabel('$p_1$')
 
@@ -403,7 +403,11 @@ X = np.linspace(.1,10,20)
 
 fig,ax = plt.subplots()
 
-ax.plot(X,[E1(x)[0] for x in X],X,[E1(x)[1] for x in X])
+#### Play with prices p1 & p2 below!
+Ecurves = zip(*[E1(x,p1=1,p2=1) for x in X])
+
+ax.plot(X,Ecurves[0],X,Ecurves[1])
+
 ax.set_xlabel('$x$')
 ax.set_ylabel('Consumptions')
 ax.legend(('$c_1$','$c_2$'))
