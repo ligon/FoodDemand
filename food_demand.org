@@ -5,6 +5,11 @@
 * Preface
 #+begin_src python
 !pip install -r requirements.txt
+# Uncomment for use in Jupyter Notebook
+%matplotlib widget
+
+# If widget doesn't work, try this (for static images)
+%matplotlib inline
 #+end_src
 * Consumer Demand for Food
   - Minimum cost model can be regarded as /prescriptive/ or
@@ -85,9 +90,6 @@ Now construct a 3-d plot of the utility function for us to visualize:
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
-
-# Uncomment for use in Jupyter Notebook
-%matplotlib widget
 
 fig = plt.figure()
 ax = plt.axes(projection='3d')
@@ -313,9 +315,6 @@ from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Uncomment for use in Jupyter Notebook
-%matplotlib widget
-
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
@@ -405,7 +404,7 @@ X = np.linspace(.1,10,20)
 fig,ax = plt.subplots()
 
 #### Play with prices p1 & p2 below!
-Ecurves = zip(*[E1(x,p1=1,p2=1) for x in X])
+Ecurves = list(zip(*[E1(x,p1=1,p2=1) for x in X]))
 
 ax.plot(X,Ecurves[0],X,Ecurves[1])
 
