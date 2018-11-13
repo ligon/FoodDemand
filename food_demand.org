@@ -1,5 +1,6 @@
 #+PROPERTY: header-args:python :results output raw  :noweb no-export :exports code
 #+LATEX_HEADER: \newcommand{\R}{\ensuremath{\mathbb{R}}}
+#+OPTIONS: texht:t toc:nil ':t H:5
 
 * Preface
 #+begin_src python
