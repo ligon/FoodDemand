@@ -238,7 +238,12 @@ X.rename({0.:80,1:81,2:82,3:83,4:84,5:75,6:76,7:77,8:78,9:79},level='year',inpla
 
 X = X.unstack('itmcode3').rename(columns=d)
 
+
 y = np.log(X)
+
+y.index.names = ['m','t','j']
+y = y.reorder_levels(['j','t','m'])
+
 y.to_pickle('y.df')
 
 #+end_src
@@ -279,63 +284,66 @@ C.to_pickle('c.df')
 z = C.groupby(['village','year','HHID'])[['Men','Women','Boys','Girls']].sum()
 z['log Hsize'] = np.log(z.sum(axis=1))
 
+z.index.names = ['m','t','j']
+z = z.reorder_levels(['j','t','m'])
+
 z.to_pickle('z.df')
 
 #+end_src
 
 #+results:
 
-* Estimating Demands
-#+begin_src python 
-  import pandas as pd
-  import cfe
+#+begin_src python :results output :var user="ethan.ligon@gmail.com" spread_fn="ICRISAT expenditures"
+import pandas as pd
+import numpy as np
+from gspread_pandas import Client, Spread
+from gspread_pandas.client import SpreadsheetNotFound
 
-  z = pd.read_pickle('z.df')
-  z.index.names = ['m','t','j']
-  z = z.reorder_levels(['j','t','m'])
+client = Client(user)
 
-  y = pd.read_pickle('y.df')
-  y.index.names = ['m','t','j']
-  y = y.reorder_levels(['j','t','m'])
+try:
+    spread = Spread(user,spread_fn)
+except SpreadsheetNotFound:
+    client.create(spread_fn)
+    spread = Spread(user,spread_fn)
+    spread.delete_sheet('Sheet1')
 
-  y = y.to_xarray().to_array('i')
-  z = z.to_xarray().to_array('k')
+y = pd.read_pickle('y.df')
+z = pd.read_pickle('z.df')
+z.index.names = ['m','t','j']
+z = z.reorder_levels(['j','t','m'])
 
-  result = cfe.Result(y=y,z=z)
+spread.df_to_sheet(np.exp(y),sheet="Expenditures")
+spread.df_to_sheet(z,sheet="Household Characteristics")
 
-  result.get_predicted_log_expenditures()
-  result.get_loglambdas()
+print(spread.sheets)
 
-  print(cfe.df_utils.df_to_orgtbl(result.beta.to_dataframe()))
 #+end_src
 
 #+results:
-|                                                         |  beta |
-|---------------------------------------------------------+-------|
-| Bengalgram dhal                                         | 0.632 |
-| Ceremonial expenses                                     | 1.292 |
-| Chillies                                                | 0.133 |
-| Clothing                                                | 0.616 |
-| Coconut                                                 | 0.464 |
-| Complete meals in hotel                                 | 0.375 |
-| Cosmetics tooth paste etc.                              | 0.603 |
-| Educational material expenses (pen, books, paper, etc.) | 0.747 |
-| Grinding/milling charges                                | 0.372 |
-| Gur (jaggery)                                           | 0.604 |
-| Jowar/Sorghum (Local variety)                           | 0.283 |
-| Medicine Doctor's fees                                  | 0.570 |
-| Milk                                                    | 0.908 |
-| Onion                                                   | 0.353 |
-| Other spices                                            | 0.437 |
-| Other vegetables                                        | 0.482 |
-| Pan, betel, etc.                                        | 0.670 |
-| Redgram dhal                                            | 0.842 |
-| Soap, washing powder                                    | 0.850 |
-| Sugar                                                   | 0.856 |
-| Tea                                                     | 0.584 |
-| Tobacco, beedi                                          | 0.272 |
-| Travel & Entertainment                                  | 0.795 |
-| Utilities                                               | 0.387 |
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'Household Characteristics' id:1760828959>]
+
+* Estimating Demands
+#+begin_src python 
+import pandas as pd
+import cfe
+
+z = pd.read_pickle('z.df')
+
+y = pd.read_pickle('y.df')
+
+y = y.to_xarray().to_array('i')
+z = z.to_xarray().to_array('k')
+
+result = cfe.Result(y=y,z=z)
+
+result.get_predicted_log_expenditures()
+result.get_loglambdas()
+
+print(cfe.df_utils.df_to_orgtbl(result.beta.to_dataframe().sort_index()))
+#+end_src
+
+#+results:
 
 
 

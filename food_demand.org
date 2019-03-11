@@ -3,8 +3,14 @@
 #+OPTIONS: texht:t toc:nil ':t H:5
 
 * Preface
-#+begin_src python
+#+begin_src ipython
 !pip install -r requirements.txt
+
+import plotly.offline as py
+import plotly.graph_objs as go
+
+py.init_notebook_mode(connected=True)
+
 # Uncomment for use in Jupyter Notebook
 %matplotlib widget
 
@@ -12,19 +18,33 @@
 #%matplotlib inline
 #+end_src
 * Consumer Demand for Food
-  - Minimum cost model can be regarded as /prescriptive/ or
-    /descriptive/.  In the former case it's a way of saying what
-    people /should/ eat.  In the latter it's a way of saying what
-    people /do/ eat. 
-*** Questions 
-    1. How could we evaluate the quality of the minimum cost diet as
-       a /prescription/?  What data or evidence might we gather?
-    2. How might we evaluate the quality of the minimum cost diet as
-       a /description/ of actual behavior?  What data or evidence
-       might we gather?
-    3. Perhaps the model works as description for some populations
-       better than others.  For what populations might the minimum
-       cost diet plan serve well?
+ - Minimum cost model can be regarded as /prescriptive/ or
+   /descriptive/.  In the former case it's a way of saying what
+   people /should/ eat.  In the latter it's a way of saying what
+   people /do/ eat. 
+
+   [[http://datahub.berkeley.edu/user-redirect/interact?account=ligon&repo=FoodDemand.git&branch=master&path][FoodDemand in datahub]]
+** Questions
+   - How do actual diets compare with minimum cost diets?
+   - How can changes in food prices affect demand for different kinds
+     of food?
+   - How can changes in  income affect demand for different kinds of
+     food?
+   - Is there a set of prices and incomes that ensure people will
+     choose to consume a nutritious diet?
+
+** Resources (food expenditures)
+   - [[https://docs.google.com/spreadsheets/d/13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo/][ICRISAT Expenditure Data]]
+   - Philippine (Mindanao) Individual Food Consumption
+   - Indian NSS
+   - Malawi IHS (See appendix of [[http://ebrary.ifpri.org/utils/getfile/collection/p15738coll2/id/128205/filename/128416.pdf][this IFPRI working paper]])
+   - Indonesian Family Life Survey
+   - http://surveys.worldbank.org/lsms
+   - US Nielsen or Consumer Expenditure Survey?
+
+** Resources (Food conversion tables)
+   - https://ndb.nal.usda.gov/ndb/
+   - FAO: http://www.fao.org/fileadmin/templates/food_composition/documents/AnFooD2.0.xlsx
 
 ** Consumer's problem
    The basic consumer's problem considers the problem of allocating a
@@ -45,7 +65,7 @@
    prices for the various goods in $c$; and $x$ is the consumer's
    total budget.
 
-**** Questions
+**** Questions                                                     :noexport:
      1. How is the minimum cost diet problem related to the
         consumer's problem?  What is the relevant commodity space?
      2. Is it possible to reframe the minimum cost diet problem in
@@ -64,7 +84,7 @@
     economist (later Senator) Paul Douglas, who devised the
     mathematical form as a way of modeling [[https://en.wikipedia.org/wiki/Cobb%25E2%2580%2593Douglas_production_function][production]].  
 
-#+begin_src python :tangle cobb_douglas.py
+#+begin_src ipython :tangle cobb_douglas.py
 from cfe import demands
 
 # Cobb-Douglas utility is a special case of a more general class
@@ -77,7 +97,7 @@ def cobb_douglas_utility(alpha):
 
     return U
 
-# Three good case:
+# Two good case:
 alpha=[0.3,0.7] # Preference parameters
 
 U = cobb_douglas_utility(alpha)
@@ -86,38 +106,51 @@ U = cobb_douglas_utility(alpha)
 #+results:
 
 Now construct a 3-d plot of the utility function for us to visualize:
-#+begin_src python :tangle cobb_douglas.py
-from mpl_toolkits import mplot3d
+#+begin_src ipython :tangle cobb_douglas.py
+import plotly.offline as py
+import plotly.graph_objs as go
+#from mpl_toolkits import mplot3d
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
-fig = plt.figure()
-ax = plt.axes(projection='3d')
+#fig = plt.figure()
+#ax = plt.axes(projection='3d')
 
 # Commodity space
 c1 = np.linspace(0.1, 10, 30)
 c2 = np.linspace(0.1, 10, 30)
 
-C1,C2 = np.meshgrid(c1,c2)
+#C1,C2 = np.meshgrid(c1,c2)
 
 Utils = np.array([[U([c_1,c_2]) for c_1 in c1] for c_2 in c2])
 
-ax.plot_surface(C1, C2, Utils, rstride=1, cstride=1,
-                cmap='viridis', edgecolor='none',alpha=0.8)
+utils = [
+    go.Surface(
+        x=c1,
+        y=c2,
+        z=Utils,
+        contours=go.surface.Contours(
+            z=go.surface.contours.Z(
+              show=True,
+              usecolormap=True,
+              highlightcolor="#42f462",
+              project=dict(z=True)
+            )
+        )
+    )
+]
 
-ax.set_xlabel('$c_1$')
-ax.set_ylabel('$c_2$')
-ax.set_zlabel('Utility')
+layout = go.Layout(
+    title='Cobb-Douglas Utility',
+    scene={'xaxis':{'title':'$c_1$'},
+           'yaxis':{'title':'$c_2$'},
+           'zaxis':{'title':'Utils'}})
 
-# Plot indifference curves
-ax.contour(C1,C2,Utils,offset=Utils.min())
-ax.contour(C1,C2,Utils, colors="k", linestyles="solid")
+fig = go.Figure(data=utils, layout=layout)
 
-plt.show()
+py.iplot(fig, filename='latex')
+
 #+end_src
-
-
-#+results:
 
 
 
@@ -144,7 +177,7 @@ plt.show()
 **** The Budget Constraint
 
 Now, how about  the budget constraint?
-#+begin_src python
+#+begin_src ipython
 import plotly.offline as py
 import plotly.graph_objs as go
 import numpy as np
@@ -155,7 +188,7 @@ py.init_notebook_mode(connected=True)
 
 ########### Play with these parameters
 alpha=[0.3,0.7] # Preference parameters
-beta=[5,1] # Curvature parameters
+beta=[1,1] # Curvature parameters
 
 ####################
 
@@ -209,7 +242,7 @@ data = budget + utils
 
 layout = go.Layout(
     title='Cobb-Douglas Utility',
-    scene={'xaxis':{'title':'$\\alpha$'},
+    scene={'xaxis':{'title':'$c_1$'},
            'yaxis':{'title':'$c_2$'},
            'zaxis':{'title':'Utils'}})
 
@@ -218,9 +251,6 @@ fig = go.Figure(data=data, layout=layout)
 py.iplot(fig, filename='latex')
 
 #+end_src
-
-#+results:
-Created new window in existing browser session.
 
 The budget constraint here is the black line/form.  
 
@@ -244,7 +274,7 @@ above.  Note that for obscure historical reasons ([[https://en.wikipedia.org/wik
 Marshall]] are to blame) it's conventional to plot the independent
 variable "price" on the vertical axis, instead of the horizontal.
 
-#+begin_src python
+#+begin_src ipython
 from cfe.demands import marshallian
 import numpy as np
 import matplotlib.pyplot as plt
@@ -276,7 +306,7 @@ plt.show()
      its price changes.  If prices remain fixed and the consumer's
      /budget/ increases this describes what we call an [[https://en.wikipedia.org/wiki/Ernst_Engel][Engel]] curve.
 
-#+begin_src python
+#+begin_src ipython
 from cfe.demands import marshallian
 import numpy as np
 import matplotlib.pyplot as plt
@@ -318,7 +348,7 @@ plt.show()
     parameters $\alpha$, the CFE case has two \(n\)-vectors, \alpha
     and \beta.
 
-#+begin_src python 
+#+begin_src ipython 
 from cfe import demands
 
 ########### Play with these parameters
@@ -333,7 +363,7 @@ U = lambda c: demands.utility(c,alpha,beta,0)
 #+results:
 
 Now construct a 3-d plot of the utility function for us to visualize:
-#+begin_src python 
+#+begin_src ipython 
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
@@ -379,7 +409,7 @@ above.  Note that for obscure historical reasons it's conventional to
 plot the independent variable "price" on the vertical axis, instead of
 the  horizontal.
 
-#+begin_src python
+#+begin_src ipython
 from cfe.demands import marshallian
 import numpy as np
 import matplotlib.pyplot as plt
@@ -414,7 +444,7 @@ plt.show()
      its price changes.  If prices remain fixed and the consumer's
      /budget/ increases this describes what we call an [[https://en.wikipedia.org/wiki/Ernst_Engel][Engel]] curve.
 
-#+begin_src python
+#+begin_src ipython
 from cfe.demands import marshallian
 import numpy as np
 import matplotlib.pyplot as plt
