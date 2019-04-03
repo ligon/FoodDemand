@@ -1,0 +1,102 @@
+#+Title: Food Demand Project
+#+Author: Ethan Ligon
+#+EPRESENT_FRAME_LEVEL: 3
+#+OPTIONS: toc:nil pri:t
+
+This project is about understanding people's /choices/ about what food
+to eat (and how much).  Sometimes these choices may lead to
+inexpensive, nutritious diets, but certainly not always!  
+
+In examining demand, we focus on the relationship between diet,
+budget, and prices.  The overall goal of the project is to be able to
+give a clear characterization of this relationship for some particular
+real-world population.
+
+One of the chief challenges of the project is finding adequate data.
+The data you'll need include:
+
+     - Detailed data on food consumption or expenditures;
+     - Data on household or individual characteristics that may
+       influence demand (e.g., household size & composition);
+     - A food conversion table, to allow mapping quantities of food
+       into nutritional outcomes.
+
+* Resources
+  Here are some data sources that you may find useful.  This is by no
+  means exhaustive.  Though if you find some other source that seems
+  interesting please discuss with me (I may know of some problems or
+  issues with the dataset).
+
+** Some Food Expenditure/Consumption Datasets
+    - [[https://docs.google.com/spreadsheets/d/13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo/][ICRISAT Expenditure Data]] (This one is mine)
+    - Philippine (Mindanao) Individual Food Consumption
+    - Indian NSS
+    - Malawi IHS (See appendix of [[http://ebrary.ifpri.org/utils/getfile/collection/p15738coll2/id/128205/filename/128416.pdf][this IFPRI working paper]])
+    - Indonesian Family Life Survey
+    - http://surveys.worldbank.org/lsms
+    - US Nielsen or Consumer Expenditure Survey?
+
+** Some food conversion tables & sources
+   - https://ndb.nal.usda.gov/ndb/
+   - I have food conversion tables for selected rounds of the Indian NSS.
+   - http://www.fao.org/infoods/infoods/tables-and-databases/en/
+   - FAO: http://www.fao.org/fileadmin/templates/food_composition/documents/AnFooD2.0.xlsx
+
+* Deliverables
+  I'll work through a simple example in class (people in selected
+  South Indian villages).
+
+   - A :: These deliverables are
+          /required/.  Note that other
+          deliverables may rely on
+          completion of A deliverables.
+   - B :: These deliverables are /very
+          desirable/.
+   - C :: These deliverables would be
+          /nice to have/.
+
+** [#A] Choice of a population, with supporting expenditure data.
+   This may be the most important decision you have to make.  There
+   are lots of different populations that may be interesting, but data
+   exists to support a careful demand analysis only for a few populations.
+
+** [#B] Nutritional content of different foods
+   For all the foods you're considering you'll need to be able to
+   describe their nutritional content, in terms that allow you to
+   compare with recommended daily allowances.  We'll provide pointers
+   to US government recommendations, but many other countries have
+   their own recommendations, which may be better suited to their
+   populations.
+
+** [#B] "Engel's Law" 
+   Engel is famous for the proposition that the share of food in a
+   household's budget falls with the overall size of the budget.  What
+   can you say about the validity of Engel's Law in the context of
+   your population?
+
+** [#B] Nutritional adequacy of diet
+   Given the food actually consumed in your data, what can you say
+   about the adequacy of the diets in the population you're studying?
+   What proportion of households consume enough so that members will
+   exceed dietary recommendations?  What proportion do not?  
+
+** [#A] Estimate Demand System
+   Estimate a system of demands for different kinds of food.
+   Characterize how consumption varies with household need.
+
+** [#C] Counterfactual Experiments
+   If everyone's total food expenditures doubled (holding prices
+   fixed) how would this affect nutrition in the population?
+
+   Think of other counterfactual experiments that might be interesting.
+
+
+** [#A] Presentation
+
+   Each group will be responsible for giving a 15 minute presentation
+   of the work they've accomplished during the sprint.  Be creative!
+   Think of awesome new ways to help others visualize what you've
+   learned. 
+
+
+

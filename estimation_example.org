@@ -1,0 +1,204 @@
+#+PROPERTY: header-args:ipython :tangle estimation_example.py
+
+In this document we'll work through a simple approach to estimating
+Constant Frisch Elasticity (CFE) demand systems.
+
+There are two prerequisites; the first is the =CFEDemands= python
+module, which can be installed with a simple:
+#+begin_src ipython :tangle no
+!pip install CFEDemands
+#+end_src
+
+The second prerequisite is a dataset including detailed information on
+household expenditures and characteristics.  The structure of that
+dataset is detailed in the next section.
+
+* Data
+
+Consider the case in which the data are saved in a google sheet; we'll
+turn data from these into =pandas= dataframes.  
+There are limits on the allowable size of google sheets (5 million
+cells), so if your dataset is larger than this you'll need some other
+mechanism to get your data into such dataframes.  Even in this latter
+case you'll want your dataframes to have a structure that matches the
+description given below.
+
+** Structure of the Spreadsheet
+
+An example spreadsheet can be found at
+https://docs.google.com/spreadsheets/d/13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo/.
+
+This spreadsheet consists of two worksheets, labeled "Expenditures"
+and "Household Characteristics", respectively.
+
+Each worksheet has the initial three columns labeled "j", "t", and
+"m"; together these identify an observation uniquely.  The column "j"
+should include a household id; the column "t" should include an
+indicator for the year or period (for those of you with
+cross-sectional data these will all take a common value, e.g., 2019);
+the column "m" should be an indicator of "market", which may be a
+region identifier, or may take a single value (e.g., "Malawi").
+
+The triple (j,t,m) will serve as the index of some constructed
+dataframes.  It is important not to have *too* many different values
+for "m" (unless you have lots of RAM to play with).
+
+Beyond the first three columns, the "Expenditures" worksheet should
+have one column for each category of expenditures (e.g., "Rice", "Goat
+meat", "Millet",...).
+
+Beyond the first three columns, the "Household Characteristics" should
+have columns corresponding to different elements of the vector of
+observable characteristics $z$.  If the data allow, I recommend
+constructing observables that match what I have in the ICRISAT data:
+namely numbers of "Men", "Women", "Boys" and "Girls"; also the
+logarithm of total household size ("log HSize").
+
+** From Sheet to DataFrame to Result Object
+
+We begin by defining a dictionary that contains the spreadsheet key. 
+One is provided for the Indian ICRISAT example that I wish to work
+through. 
+#+begin_src ipython :results silent
+Sheets = {'ICRISAT':'13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo',
+         # 'Your dataset':'Your google spreadsheet key',
+         }
+#+end_src
+
+With the spreadsheet defined , grab it and define a couple of
+dataframes. Note that the spreadsheet must be public for this approach
+to work!
+
+#+begin_src ipython :results silent
+import pandas as pd
+import numpy as np
+
+# The function below adapted from Gianmario Spacagna's suggestion at
+# https://stackoverflow.com/questions/19611729/getting-google-spreadsheet-csv-into-a-pandas-dataframe
+def dataframe_from_gspreadsheet(sheet_name, key):
+    """Transform public google spreadsheet into pandas.DataFrame."""
+    
+    url = 'https://docs.google.com/spreadsheets/d/{key}/gviz/tq?tqx=out:csv&sheet={sheet_name}&headers=1'.format(
+        key=key, sheet_name=sheet_name.replace(' ', '%20'))
+
+    df = pd.read_csv(url)
+
+    return df.drop([col for col in df.columns if col.startswith('Unnamed')], axis=1)
+
+# Change 'ICRISAT' to key of your own sheet in Sheets, above
+x = dataframe_from_gspreadsheet("Expenditures", Sheets['ICRISAT'])
+
+# Change 'ICRISAT' to key of your own sheet in Sheets, above
+z = dataframe_from_gspreadsheet("Household Characteristics", Sheets['ICRISAT'])
+
+# Assume a single market: (Comment this out to make each village its own market)
+z['m'] = 1
+x['m'] = 1
+
+# Take logs of expenditures; call this y
+y = np.log(x.replace(0,np.nan).set_index(['j','t','m']))
+
+z.set_index(['j','t','m'],inplace=True)
+#+end_src
+
+This gives a dataframe of household characteristics $z$ with a simple structure.
+
+#+begin_src ipython :tangle no
+z.head()
+#+end_src
+
+Also a dataframe of log expenditures $y$ with a similarly simple
+structure.  Note that any expenditures of zero are dropped and
+replaced with a missing value indicator.
+#+begin_src ipython :tangle no
+y.head()
+#+end_src
+
+With nothing more than this, we can estimate the demand system.  This
+happens in two steps.  The first is the "reduced form" step:
+
+#+begin_src ipython  :results silent
+import cfe
+
+result = cfe.Result(y=y,z=z)
+#+end_src
+
+This creates a complicated "Result" object, with lots of different
+attributes.  Note from below that attributes $y$ and $z$ are now defined.
+
+#+begin_src ipython :tangle no
+result
+#+end_src
+
+** First step of Estimation
+
+Recall that there are two steps to estimation; the first step
+involves estimating the "reduced form" linear regression 
+\[
+y_{it}^j = {a}_{it} + \delta_i'{z}^j_t + \epsilon_{it}^j.
+\]
+
+The Result class has code to estimate this in one line:
+#+begin_src ipython  :results silent
+result.get_reduced_form()
+#+end_src
+
+After running this we can examine the estimated coefficients $\delta$:
+#+begin_src ipython
+result.delta.to_dataframe().unstack('k')
+#+end_src
+
+Also the good-time constants $a_{it}$:
+#+begin_src ipython
+result.a.to_dataframe().unstack('i')
+#+end_src
+
+** Second step of Estimation
+
+The second step involves using Singular Value Decomposition to find
+the rank one matrix that best approximates the residuals $e_{it}^j$.
+This can be interpreted as
+\[
+    -\beta_i\log\lambda^j_t,
+\]
+where the $\log\lambda^j_t$ is the log of the marginal utility of
+expenditures (MUE) for household $j$ at time $t$, and where $\beta_i$ are
+the corresponding "Frisch elasticities" that tell us how much
+demand changes as the MUE falls.
+
+Estimates can also be computed as a one-liner:
+#+begin_src ipython  
+result.get_beta().to_dataframe()
+#+end_src
+
+That's all there is to estimation!  Note that we didn't estimate
+demands for all goods---lots of goods didn't have enough observations,
+and were automatically dropped.  (This can be controlled using the
+=min_proportion_items= and =min_xproducts= attributes when one
+instantiates the result object.)
+
+** Assessment of Fit
+Now, let's see how we did, by comparing total expenditures predicted by the
+model we've estimated with actual total expenditures:
+
+#+begin_src ipython :tangle no
+import matplotlib.pyplot as plt
+%matplotlib inline
+import matplotlib.cm as cm
+
+xbar = np.exp(result.y).sum(['m','i']).to_dataframe('xbar').replace(0,np.nan).squeeze()
+xhat = result.get_predicted_expenditures().sum(['m','i']).to_dataframe('xhat').replace(0,np.nan).squeeze()
+
+# Make dataframe of actual & predicted
+df = pd.DataFrame({'Actual':np.log(xbar),'Predicted':np.log(xhat)})
+
+df.plot.scatter(x='Predicted',y='Actual')
+
+# Add 45 degree line
+v = plt.axis()
+vmin = np.max([v[0],v[2]])
+vmax = np.max([v[1],v[3]])
+plt.plot([vmin,vmax],[vmin,vmax])
+#+end_src
+
+
