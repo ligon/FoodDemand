@@ -211,6 +211,7 @@ L.to_pickle('l.df')
 
 #+end_src
 
+** Expenditures and Quantities
 #+begin_src python :var codes=food_codes :tangle expenditures.py
 import numpy as np
 import pandas as pd
@@ -238,10 +239,12 @@ Q = Consumption.groupby(['village','year','HHID','itmcode3','unit2'])['gdsinq'].
 
 Units = {'Q':'Quintal',
          'L':'Kilograms', # On theory of fluid weight being roughly 1kg/l
+         'l':'Kilograms',
          'C':'Hundreds',
          'T':'Cubic feet',
          'M':'Meters',
          'K':'Kilograms',
+         'k':'Kilograms',
          'N':'Number',
          'A':'Acres',
          'H':'Hours',
@@ -252,12 +255,17 @@ X.rename({0.:80,1:81,2:82,3:83,4:84,5:75,6:76,7:77,8:78,9:79},level='year',inpla
 Q.rename({0.:80,1:81,2:82,3:83,4:84,5:75,6:76,7:77,8:78,9:79},level='year',inplace=True)
 
 X = X.unstack('itmcode3').rename(columns=d)
+X.index = X.index.reorder_levels(['HHID','year','village'])
+X.index.names = ['j','t','m']
+
+X.to_pickle('x.df')
+
 Q = Q.unstack('itmcode3').rename(columns=d)
 
 y = np.log(X)
 
-y.index.names = ['m','t','j']
-y = y.reorder_levels(['j','t','m'])
+#y.index.names = ['m','t','j']
+#y = y.reorder_levels(['j','t','m'])
 
 y.to_pickle('y.df')
 
@@ -267,7 +275,6 @@ Q = Q.reorder_levels(['j','t','m','unit'])
 Q = Q.fillna(0)
 
 Q.to_pickle('q.df')
-
 #+end_src
 
 #+results:
@@ -534,7 +541,7 @@ nss68.rename(columns={'item':'NSS Item'},inplace=True)
 Units = {'kg':'Kilograms',
          'gm':'Grams',
          'no.':'Number',
-         'Re':'Unknown',
+         'Re':'Rupees',
          'litre':'Kilograms'}
 
 nss68['unit'].replace(Units,inplace=True)
@@ -554,9 +561,10 @@ fct.loc[fct.unit=='Grams','unit'] = 'Kilograms'
 fct.loc[fct.unit=='Hundreds',nutrients] = fct.loc[fct.unit=='Hundreds',nutrients]*100
 fct.loc[fct.unit=='Hundreds','unit'] = 'Number'
 
-fct = fct.reset_index().set_index('ICRISAT Food Label')[nutrients]
+fct = fct.reset_index().set_index(['ICRISAT Food Label','unit'])
 
-fct=fct[~fct.index.duplicated()]
+fct=fct[~fct.index.duplicated()][nutrients]
+fct.to_pickle('fct_units.df')
 
 fct = fct.fillna(0)
 
@@ -651,6 +659,10 @@ fct.to_pickle('fct.df')
 
 
 
+
+
+
+
 #+name: tab:nss_and_icrisat_foods
 |    | Code | NSS Item                                          | ICRISAT Food Label                  |
 |----+------+---------------------------------------------------+-------------------------------------|
@@ -739,28 +751,120 @@ fct.to_pickle('fct.df')
 
 
 
-** Calculate ICRISAT Nutrients
+** Calculate ICRISAT Nutrients & Standardized Quantities
 #+begin_src ipython :tangle nutrients.py
 import pandas as pd
+import numpy as np
+
+def prices(Q,X,tol=1e-6):
+    """Impute prices from data on expenditures and quantities.
+
+    Non-trivial because quantities may be reported in different units.
+    """
+    
+    myQ = Q.groupby(['j','t','m','unit']).sum()
+
+    B={}
+    for t in myQ.index.levels[1]:
+        for m in myQ.index.levels[2]:
+            for i in myQ.columns:
+                useX = X.query("t==%d and m=='%s'" % (t,m))[i].fillna(0)
+                useQ = myQ.query("t==%d and m=='%s'" % (t,m))[i].fillna(0).unstack('unit')
+                if len(useX):
+                    q,x = useQ.fillna(0).align(useX.fillna(0),axis=0,join='inner')
+                    b = np.linalg.lstsq(q,x,rcond=None)[0]
+                    b = pd.Series(b,index=q.columns,name=i)
+                    B[(t,m,i)] = b.where(b>0,0).round(6)
+
+    P = pd.concat(B).replace(0,np.nan).dropna()
+    P.index.names = ['t','m','i','unit']
+
+    P = P.unstack(['i','unit'])
+    
+    return P
+
+
+def quantities(X,P,tol=1e-6):
+    """
+    Return standardized quantities from expenditures & prices.
+
+    Inputs are:
+        - X :: DataFrame of expenditures, with index (j,t,m)
+        - P :: DataFrame of prices, with index (i,unit,m,t)
+               and columns (i,m,t).
+    """
+
+    Q={}
+    for t in X.index.levels[1]:
+        for m in X.index.levels[2]:
+            useX = X.query("t==%d and m=='%s'" % (t,m)).fillna(0)
+            try:
+                useP = P.xs((t,m)).fillna(0).unstack('unit')
+                foo = useX.align(useP.T,axis=1,join='inner')
+                if len(useX):
+                    myQ = foo[0]@pd.DataFrame(np.linalg.pinv(foo[1]),index=foo[1].columns,columns=foo[1].index)
+                    myQ = myQ.loc[:,(myQ > tol).sum()>1]
+                    Q[(t,m)] = myQ
+            except KeyError: pass
+
+    return Q
+
+def nutrition(fct,Q,tol=1e-6):
+    """Compute household nutritional intake.
+
+    Inputs:
+
+     - fct :: food conversion DataFrame with index of food
+              labels and units, and columns nutrients.
+
+     - Q :: Dictionary of DataFrames with keys (t,m'); each DataFrame
+            is Food quantities, index of j, columns (i, units).
+    """
+
+    N = {}
+    for k in Q.keys():
+        baz = Q[k].align(fct.T,axis=1,join='inner')
+
+        myN = baz[0].fillna(0)@baz[1].fillna(0).T
+        N[k] = myN.loc[myN.sum(axis=1)>tol,:]
+
+    return N
 
 Q = pd.read_pickle('q.df')
-fct = pd.read_pickle('fct.df')
+X = pd.read_pickle('x.df')
 
-# Intersection of foods in Q and fct0
-use = list(set(fct.index.tolist()).intersection(Q.columns))
+X.columns.name = 'i'
+Q.columns.name = 'i'
+    
+fct = pd.read_pickle('fct_units.df')
+fct.index.names = ['i','unit']
 
-N = Q[use].dot(fct.loc[use,:])
+P = prices(Q,X,tol=1e-6)
+
+# Get prices using units in fct:
+myP = P.T.align(fct,axis=0,join='right')[0].T
+
+myP0 = myP.copy()
+myP0.columns = myP0.columns.droplevel('unit')
+
+myP0 = myP0.dropna(how='all')
+myP0.to_pickle('prices.df')
+
+#Qhat = quantities(X,P)
 
 # Nutrients per day
-N = N.groupby(['j','t','m']).sum()/365
+#N = {k:n/365 for k,n in nutrition(fct,Qhat).items()}
 
-N.to_pickle('nutrients.df')
+#N = pd.concat(N.values())
+
+#N.to_pickle('nutrients.df')
+
+#N.head()
 #+end_src
 
-#+results:
 
 * Demographics from Schedule C
-#+begin_src python :tangle c.py
+#+begin_src ipython :tangle c.py
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
@@ -784,35 +888,28 @@ del C['hhno']
 
 #| Nutrition                      | Source | C 1-3 | F 4-8 | M 4-8 | F 9-13 | M 9-13 | F 14-18 | M 14-18 | F 19-30 | M 19-30 | F 31-50 | M 31-50 | F 51+ | M 51+ |
 
-agesex = ['M 0-3','F 0-3',
-          'M 4-8','F 4-8',
-          'M 9-13','F 9-13',
-          'M 14-18','F 14-18',
-          'M 19-30','F 19-30',
-          'M 31-50','F 31-50',
-          'M 51+','F 51+']
+agesex = ['C 0-0.5', 'C 0.5-1', 'C 1-3', 'C 4-6', 'C 7-9',
+          'B 10-12', 'B 13-15', 'B 16-17',
+          'G 10-12', 'G 13-15', 'G 16-17',
+          'M','W']
 
+C['C 0-0.5'] = C['age'] <= 0.5
+C['C 0.5-1'] = (C['age'] > 0.5) & (C['age'] <= 1)
+C['C 1-3'] = (C['age'] > 1) & (C['age'] <= 3)
+C['C 4-6'] = (C['age'] > 3) & (C['age'] <= 6)
+C['C 7-9'] = (C['age'] > 6) & (C['age'] <= 9)
 
-C['M 0-3'] = (C['sex']=='M') & (C['age'] <= 3)
-C['F 0-3'] = (C['sex']=='F') & (C['age'] <= 3)
+C['B 10-12'] = (C['sex']=='M') & (C['age'] > 9) & (C['age'] <= 12)
+C['G 10-12'] = (C['sex']=='F') & (C['age'] > 9) & (C['age'] <= 12)
 
-C['M 4-8'] = (C['sex']=='M') & (C['age'] > 3) & (C['age'] <= 8)
-C['F 4-8'] = (C['sex']=='F') & (C['age'] > 3) & (C['age'] <= 8)
+C['B 13-15'] = (C['sex']=='M') & (C['age'] > 12) & (C['age'] <= 15)
+C['G 13-15'] = (C['sex']=='F') & (C['age'] > 12) & (C['age'] <= 15)
 
-C['M 9-13'] = (C['sex']=='M') & (C['age'] > 8) & (C['age'] <= 13)
-C['F 9-13'] = (C['sex']=='F') & (C['age'] > 8) & (C['age'] <= 13)
+C['B 16-17'] = (C['sex']=='M') & (C['age'] > 15) & (C['age'] <= 17)
+C['G 16-17'] = (C['sex']=='F') & (C['age'] > 15) & (C['age'] <= 17)
 
-C['M 14-18'] = (C['sex']=='M') & (C['age'] > 13) & (C['age'] <= 18)
-C['F 14-18'] = (C['sex']=='F') & (C['age'] > 13) & (C['age'] <= 18)
-
-C['M 19-30'] = (C['sex']=='M') & (C['age'] > 18) & (C['age'] <= 30)
-C['F 19-30'] = (C['sex']=='F') & (C['age'] > 18) & (C['age'] <= 30)
-
-C['M 31-50'] = (C['sex']=='M') & (C['age'] > 30) & (C['age'] <= 50)
-C['F 31-50'] = (C['sex']=='F') & (C['age'] > 30) & (C['age'] <= 50)
-
-C['M 51+'] = (C['sex']=='M') & (C['age'] > 50)
-C['F 51+'] = (C['sex']=='F') & (C['age'] > 50)
+C['M'] = (C['sex']=='M') & (C['age'] > 17) 
+C['W'] = (C['sex']=='F') & (C['age'] > 17) 
 
 C.to_pickle('c.df')
 
@@ -826,9 +923,29 @@ z.to_pickle('z.df')
 
 #+end_src
 
-#+results:
+
+
 
 * Nutritional needs of households
+
+| Sex-Age | Calories | Protein | Fat | Calcium | Iron | Betacarotene | Thiamine | Riboflavin | Niacin | Ascorbic Acid |
+|---------+----------+---------+-----+---------+------+--------------+----------+------------+--------+---------------|
+| C 0-0.5 |          |         |     |     500 |      |              |       .2 |         .3 |        |            25 |
+| C 0.5-1 |          |         |  19 |     500 |    5 |         2800 |       .3 |         .4 |        |            25 |
+| C 1-3   |     1060 |    16.7 |  27 |     600 |    9 |         3200 |       .5 |         .6 |      8 |            40 |
+| C 4-6   |     1350 |    20.1 |  25 |     600 |   13 |         3200 |       .7 |         .8 |     11 |            40 |
+| C 7-9   |     1690 |    29.5 |  30 |     600 |   16 |         4800 |       .8 |         1. |     13 |            40 |
+| B 10-12 |     2190 |    39.9 |  35 |     800 |   21 |         4800 |      1.1 |        1.3 |     15 |            40 |
+| G 10-12 |     2010 |    40.4 |  35 |     800 |   27 |         4800 |       1. |        1.2 |     13 |            40 |
+| B 13-15 |     2750 |    54.3 |  45 |     800 |   32 |         4800 |      1.4 |        1.6 |     16 |            40 |
+| G 13-15 |     2330 |    51.9 |  40 |     800 |   27 |         4800 |      1.2 |        1.4 |     14 |            40 |
+| B 16-17 |     3020 |    61.5 |  50 |     800 |   28 |         4800 |      1.5 |        1.8 |     17 |            40 |
+| G 16-17 |     2440 |    55.5 |  35 |     800 |   26 |         4800 |       1. |        1.2 |     14 |            40 |
+| M       |     2730 |      60 |  30 |     600 |   17 |         4800 |      1.4 |        1.4 |     18 |            40 |
+| W       |     2230 |      55 |  25 |    1200 |   21 |         4800 |      1.1 |        1.3 |     14 |            40 |
+
+
+
 * Write DataFrames to google sheet
 #+begin_src python :results output :var user="ethan.ligon@gmail.com" spread_fn="ICRISAT expenditures"
 import pandas as pd
@@ -848,8 +965,8 @@ except SpreadsheetNotFound:
 y = pd.read_pickle('y.df')
 q = pd.read_pickle('q.df')
 z = pd.read_pickle('z.df')
-z.index.names = ['m','t','j']
-z = z.reorder_levels(['j','t','m'])
+#z.index.names = ['m','t','j']
+#z = z.reorder_levels(['j','t','m'])
 
 spread.df_to_sheet(np.exp(y),sheet="Expenditures")
 spread.df_to_sheet(z,sheet="Household Characteristics")
@@ -862,12 +979,14 @@ print(spread.sheets)
 
 #+results:
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'Household Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'Household Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'Household Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'Household Characteristics' id:1760828959>, <Worksheet 'Consumption (kgs)' id:973503312>, <Worksheet 'Consumption' id:1987214981>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'Household Characteristics' id:1760828959>, <Worksheet 'Consumption (kgs)' id:973503312>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'Household Characteristics' id:1760828959>]
 
 * Estimating Demands
-#+begin_src ipython 
+#+begin_src ipython :tangle estimation.py
 import pandas as pd
 import cfe
 import numpy as np
@@ -875,33 +994,67 @@ import numpy as np
 z = pd.read_pickle('z.df')
 
 y = pd.read_pickle('y.df')
+
+prices = pd.read_pickle('prices.df')
+
 #y = np.log(pd.read_pickle('q.df').replace(0,np.nan))
 
 y = y.to_xarray().to_array('i')
 z = z.to_xarray().to_array('k')
+prices = prices.to_xarray().to_array('i')
 
-result = cfe.Result(y=y,z=z)
+result = cfe.Result(y=y,z=z,prices=prices)
 
 result.get_predicted_log_expenditures()
 result.get_loglambdas()
+result.get_alpha()
 
 result.to_dataset('result.ds')
 
-print(cfe.df_utils.df_to_orgtbl(result.beta.to_dataframe().sort_index()))
+print(cfe.df_utils.df_to_orgtbl(result.beta.to_dataframe().sort_values('beta',ascending=False)))
 #+end_src
+
+#+results:
+| i                                                       | beta      |
+|---------------------------------------------------------+-----------|
+| Ceremonial expenses                                     | \(1.314\) |
+| Milk                                                    | \(0.925\) |
+| Redgram dhal                                            | \(0.856\) |
+| Soap, washing powder                                    | \(0.854\) |
+| Sugar                                                   | \(0.836\) |
+| Travel & Entertainment                                  | \(0.789\) |
+| Pan, betel, etc.                                        | \(0.676\) |
+| Educational material expenses (pen, books, paper, etc.) | \(0.658\) |
+| Bengalgram dhal                                         | \(0.636\) |
+| Gur (jaggery)                                           | \(0.613\) |
+| Clothing                                                | \(0.608\) |
+| Cosmetics tooth paste etc.                              | \(0.601\) |
+| Medicine Doctor's fees                                  | \(0.593\) |
+| Tea                                                     | \(0.571\) |
+| Other vegetables                                        | \(0.506\) |
+| Coconut                                                 | \(0.445\) |
+| Other spices                                            | \(0.433\) |
+| Utilities                                               | \(0.381\) |
+| Onion                                                   | \(0.367\) |
+| Grinding/milling charges                                | \(0.355\) |
+| Complete meals in hotel                                 | \(0.350\) |
+| Tobacco, beedi                                          | \(0.278\) |
+| Jowar/Sorghum (Local variety)                           | \(0.242\) |
+| Chillies                                                | \(0.135\) |
+:end:
 
 
 * Expenditures and Nutrients vs. \log\lambda
 
 ** Expenditures vs. \log\lambda
    :PROPERTIES:
-   :EXPORT_FILE_NAME: exp_vs_loglambda
+   :EXPORT_FILE_NAME: exp_vs_loglambda.ipynb
    :END:
 #+begin_src ipython
 %matplotlib inline
 import cfe
 import pandas as pd
-import pylab as pl
+import matplotlib.pyplot as plt
 
 r0 = cfe.from_dataset('result.ds')
 
@@ -913,16 +1066,14 @@ l0 = r0.loglambdas.sel(t=75,m='A')
 # Predicted total expenditures given lambda & prices
 x0 = r0.get_predicted_expenditures().sum('i').sel(t=75,m='A')
 
-pl.scatter(x0,l0)
-pl.show()
+plt.scatter(x0,l0)
+plt.show()
 #+end_src
 
 ** Nutrients
 Now consider nutrients:
 #+begin_src ipython
 
-# This will be in expenditures, but everyone faces same prices,
-# so relative nutrition will be correct.
 Q = r0.get_predicted_expenditures().sel(t=75,m='A',drop=True).to_dataframe('q')
 Q = Q.unstack('i')
 Q.columns = Q.columns.droplevel(0)
@@ -947,6 +1098,229 @@ pl.show()
 #+end_src
 
 
+#+begin_src ipython
+
+fct = pd.read_pickle('fct.df')
+
+fct.head()
+#+end_src
+
+#+results:
+:results:
+# Out[6]:
+# text/plain
+:                           protein   fat       fibre  carbohydrate  \
+: ICRISAT Food Label                                                  
+: Paddy (Local variety)   78.099998   5.5   37.400002    771.600037   
+: Paddy (HYV)             78.099998   5.5   37.400002    771.600037   
+: Rice (local variety)    78.099998   5.5   37.400002    771.600037   
+: Rice (HYV variety)      78.099998   5.5   37.400002    771.600037   
+: Wheat (Local variety)  105.800003  15.0  112.949997    644.449951   
+: 
+:                        energy_kcal  energy_kj     calcium       iron  \
+: ICRISAT Food Label                                                     
+: Paddy (Local variety)  3513.423096    14710.0   81.099998   7.200000   
+: Paddy (HYV)            3513.423096    14710.0   81.099998   7.200000   
+: Rice (local variety)   3513.423096    14710.0   81.099998   7.200000   
+: Rice (HYV variety)     3513.423096    14710.0   81.099998   7.200000   
+: Wheat (Local variety)  3208.894531    13435.0  351.500000  40.349998   
+: 
+:                        betacarotene  caroten_total  thiamine  riboflavin  \
+: ICRISAT Food Label                                                         
+: Paddy (Local variety)           0.0          469.0       1.7         0.6   
+: Paddy (HYV)                     0.0          469.0       1.7         0.6   
+: Rice (local variety)            0.0          469.0       1.7         0.6   
+: Rice (HYV variety)              0.0          469.0       1.7         0.6   
+: Wheat (Local variety)          28.5         2840.0       4.4         1.5   
+: 
+:                        niacin  ascorbic_total  ext_source  pu_cal  pu_prot  \
+: ICRISAT Food Label                                                           
+: Paddy (Local variety)   25.10             0.0         0.0  3460.0     75.0   
+: Paddy (HYV)             25.10             0.0         0.0  3460.0     75.0   
+: Rice (local variety)    25.10             0.0         0.0  3460.0     75.0   
+: Rice (HYV variety)      25.10             0.0         0.0  3460.0     75.0   
+: Wheat (Local variety)   25.25             0.0         0.0  3410.0    121.0   
+: 
+:                        pu_fat  
+: ICRISAT Food Label             
+: Paddy (Local variety)     5.0  
+: Paddy (HYV)               5.0  
+: Rice (local variety)      5.0  
+: Rice (HYV variety)        5.0  
+: Wheat (Local variety)    17.0  
+
+# text/html
+#+BEGIN_EXPORT html
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>protein</th>
+      <th>fat</th>
+      <th>fibre</th>
+      <th>carbohydrate</th>
+      <th>energy_kcal</th>
+      <th>energy_kj</th>
+      <th>calcium</th>
+      <th>iron</th>
+      <th>betacarotene</th>
+      <th>caroten_total</th>
+      <th>thiamine</th>
+      <th>riboflavin</th>
+      <th>niacin</th>
+      <th>ascorbic_total</th>
+      <th>ext_source</th>
+      <th>pu_cal</th>
+      <th>pu_prot</th>
+      <th>pu_fat</th>
+    </tr>
+    <tr>
+      <th>ICRISAT Food Label</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Paddy (Local variety)</th>
+      <td>78.099998</td>
+      <td>5.5</td>
+      <td>37.400002</td>
+      <td>771.600037</td>
+      <td>3513.423096</td>
+      <td>14710.0</td>
+      <td>81.099998</td>
+      <td>7.200000</td>
+      <td>0.0</td>
+      <td>469.0</td>
+      <td>1.7</td>
+      <td>0.6</td>
+      <td>25.10</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3460.0</td>
+      <td>75.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>Paddy (HYV)</th>
+      <td>78.099998</td>
+      <td>5.5</td>
+      <td>37.400002</td>
+      <td>771.600037</td>
+      <td>3513.423096</td>
+      <td>14710.0</td>
+      <td>81.099998</td>
+      <td>7.200000</td>
+      <td>0.0</td>
+      <td>469.0</td>
+      <td>1.7</td>
+      <td>0.6</td>
+      <td>25.10</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3460.0</td>
+      <td>75.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>Rice (local variety)</th>
+      <td>78.099998</td>
+      <td>5.5</td>
+      <td>37.400002</td>
+      <td>771.600037</td>
+      <td>3513.423096</td>
+      <td>14710.0</td>
+      <td>81.099998</td>
+      <td>7.200000</td>
+      <td>0.0</td>
+      <td>469.0</td>
+      <td>1.7</td>
+      <td>0.6</td>
+      <td>25.10</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3460.0</td>
+      <td>75.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>Rice (HYV variety)</th>
+      <td>78.099998</td>
+      <td>5.5</td>
+      <td>37.400002</td>
+      <td>771.600037</td>
+      <td>3513.423096</td>
+      <td>14710.0</td>
+      <td>81.099998</td>
+      <td>7.200000</td>
+      <td>0.0</td>
+      <td>469.0</td>
+      <td>1.7</td>
+      <td>0.6</td>
+      <td>25.10</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3460.0</td>
+      <td>75.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>Wheat (Local variety)</th>
+      <td>105.800003</td>
+      <td>15.0</td>
+      <td>112.949997</td>
+      <td>644.449951</td>
+      <td>3208.894531</td>
+      <td>13435.0</td>
+      <td>351.500000</td>
+      <td>40.349998</td>
+      <td>28.5</td>
+      <td>2840.0</td>
+      <td>4.4</td>
+      <td>1.5</td>
+      <td>25.25</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3410.0</td>
+      <td>121.0</td>
+      <td>17.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+#+END_EXPORT
+:end:
 
 
 
