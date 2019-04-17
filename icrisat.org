@@ -772,7 +772,7 @@ myP = P.T.align(fct,axis=0,join='right')[0].T
 myP0 = myP.copy()
 myP0.columns = myP0.columns.droplevel('unit')
 
-myP0 = myP0.dropna(how='all')
+myP0 = myP0.dropna(how='all').fillna(1)
 myP0.to_pickle('prices.df')
 
 #Qhat = quantities(X,P)
@@ -786,6 +786,11 @@ myP0.to_pickle('prices.df')
 
 #N.head()
 #+end_src
+
+#+results:
+:results:
+# Out[2]:
+:end:
 
 
 * Demographics from Schedule C
@@ -940,37 +945,34 @@ result.to_dataset('result.ds')
 print(cfe.df_utils.df_to_orgtbl(result.beta.to_dataframe().sort_values('beta',ascending=False)))
 #+end_src
 
-#+results:
 | i                                                       | beta      |
 |---------------------------------------------------------+-----------|
-| Ceremonial expenses                                     | \(1.246\) |
-| Milk                                                    | \(0.919\) |
+| Ceremonial expenses                                     | \(1.244\) |
+| Milk                                                    | \(0.917\) |
 | Soap, washing powder                                    | \(0.856\) |
-| Sugar                                                   | \(0.848\) |
-| Redgram dhal                                            | \(0.847\) |
-| Travel & Entertainment                                  | \(0.777\) |
+| Sugar                                                   | \(0.851\) |
+| Redgram dhal                                            | \(0.840\) |
+| Travel & Entertainment                                  | \(0.785\) |
 | Pan, betel, etc.                                        | \(0.670\) |
-| Educational material expenses (pen, books, paper, etc.) | \(0.655\) |
-| Bengalgram dhal                                         | \(0.640\) |
-| Gur (jaggery)                                           | \(0.621\) |
-| Clothing                                                | \(0.610\) |
-| Cosmetics tooth paste etc.                              | \(0.604\) |
-| Edible oils                                             | \(0.599\) |
-| Tea                                                     | \(0.591\) |
-| Medicine Doctor's fees                                  | \(0.572\) |
-| Other vegetables                                        | \(0.499\) |
-| Coconut                                                 | \(0.455\) |
-| Other spices                                            | \(0.438\) |
-| Utilities                                               | \(0.399\) |
-| Rice                                                    | \(0.381\) |
-| Grinding/milling charges                                | \(0.367\) |
-| Onion                                                   | \(0.361\) |
-| Tobacco, beedi                                          | \(0.300\) |
-| Jowar/Sorghum                                           | \(0.166\) |
+| Educational material expenses (pen, books, paper, etc.) | \(0.666\) |
+| Bengalgram dhal                                         | \(0.637\) |
+| Gur (jaggery)                                           | \(0.616\) |
+| Clothing                                                | \(0.609\) |
+| Cosmetics tooth paste etc.                              | \(0.602\) |
+| Edible oils                                             | \(0.597\) |
+| Tea                                                     | \(0.588\) |
+| Medicine Doctor's fees                                  | \(0.588\) |
+| Other vegetables                                        | \(0.496\) |
+| Coconut                                                 | \(0.458\) |
+| Other spices                                            | \(0.437\) |
+| Utilities                                               | \(0.396\) |
+| Rice                                                    | \(0.380\) |
+| Grinding/milling charges                                | \(0.365\) |
+| Onion                                                   | \(0.363\) |
+| Complete meals in hotel                                 | \(0.350\) |
+| Tobacco, beedi                                          | \(0.303\) |
+| Jowar/Sorghum                                           | \(0.165\) |
 | Chillies                                                | \(0.144\) |
-
-
-:end:
 
 
 * Expenditures and Nutrients vs. \log\lambda
