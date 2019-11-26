@@ -930,10 +930,6 @@ prices = pd.read_pickle('prices.df')
 
 #y = np.log(pd.read_pickle('q.df').replace(0,np.nan))
 
-y = y.to_xarray().to_array('i')
-z = z.to_xarray().to_array('k')
-prices = prices.to_xarray().to_array('i')
-
 result = cfe.Result(y=y,z=z,prices=prices)
 
 result.get_predicted_log_expenditures()
@@ -942,37 +938,43 @@ result.get_alpha()
 
 result.to_dataset('result.ds')
 
-print(cfe.df_utils.df_to_orgtbl(result.beta.to_dataframe().sort_values('beta',ascending=False)))
+#print(cfe.df_utils.df_to_orgtbl(result.beta.to_dataframe().sort_values('beta',ascending=False)))
 #+end_src
 
-| i                                                       | beta      |
-|---------------------------------------------------------+-----------|
-| Ceremonial expenses                                     | \(1.244\) |
-| Milk                                                    | \(0.917\) |
-| Soap, washing powder                                    | \(0.856\) |
-| Sugar                                                   | \(0.851\) |
-| Redgram dhal                                            | \(0.840\) |
-| Travel & Entertainment                                  | \(0.785\) |
-| Pan, betel, etc.                                        | \(0.670\) |
-| Educational material expenses (pen, books, paper, etc.) | \(0.666\) |
-| Bengalgram dhal                                         | \(0.637\) |
-| Gur (jaggery)                                           | \(0.616\) |
-| Clothing                                                | \(0.609\) |
-| Cosmetics tooth paste etc.                              | \(0.602\) |
-| Edible oils                                             | \(0.597\) |
-| Tea                                                     | \(0.588\) |
-| Medicine Doctor's fees                                  | \(0.588\) |
-| Other vegetables                                        | \(0.496\) |
-| Coconut                                                 | \(0.458\) |
-| Other spices                                            | \(0.437\) |
-| Utilities                                               | \(0.396\) |
-| Rice                                                    | \(0.380\) |
-| Grinding/milling charges                                | \(0.365\) |
-| Onion                                                   | \(0.363\) |
-| Complete meals in hotel                                 | \(0.350\) |
-| Tobacco, beedi                                          | \(0.303\) |
-| Jowar/Sorghum                                           | \(0.165\) |
-| Chillies                                                | \(0.144\) |
+#+begin_src ipython
+print(result.prices.coords['i'])
+print(result.prices.sel(t=75,m='A'))
+#print(prices.sel(t=75,m='A',i=result.prices.coords['i']))
+#+end_src
+
+#+results:
+:results:
+# Out[13]:
+# output
+<xarray.DataArray 'i' (i: 26)>
+array(['Bengalgram dhal', 'Ceremonial expenses', 'Chillies', 'Clothing',
+       'Coconut', 'Complete meals in hotel', 'Cosmetics tooth paste etc.',
+       'Edible oils',
+       'Educational material expenses (pen, books, paper, etc.)',
+       'Grinding/milling charges', 'Gur (jaggery)', 'Jowar/Sorghum',
+       "Medicine Doctor's fees", 'Milk', 'Onion', 'Other spices',
+       'Other vegetables', 'Pan, betel, etc.', 'Redgram dhal', 'Rice',
+       'Soap, washing powder', 'Sugar', 'Tea', 'Tobacco, beedi',
+       'Travel & Entertainment', 'Utilities'], dtype=object)
+Coordinates:
+  * i        (i) object 'Bengalgram dhal' 'Ceremonial expenses' ... 'Utilities'
+<xarray.DataArray 'prices' (i: 26)>
+array([ 6.855503,       nan,  2.339487,       nan,  1.140172,  1.      ,
+             nan,  8.899037,       nan,       nan,  2.428749,  1.344647,
+             nan,  2.038483,  0.9723  ,  0.353038,  1.      ,  1.      ,
+        5.409195,  1.38935 ,       nan,  3.275923, 14.918605,       nan,
+             nan,       nan])
+Coordinates:
+    m        <U1 'A'
+    t        int64 75
+  * i        (i) object 'Bengalgram dhal' 'Ceremonial expenses' ... 'Utilities'
+
+:end:
 
 
 * Expenditures and Nutrients vs. \log\lambda

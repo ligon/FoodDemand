@@ -1,0 +1,525 @@
+** Setup
+   :PROPERTIES:
+   :CUSTOM_ID: setup
+   :END:
+
+To retrieve World Bank Microdata, register here:
+https://microdata.worldbank.org/index.php/auth/register/
+
+#+BEGIN_SRC ipython
+    import pandas as pd
+    import numpy as np
+#+END_SRC
+
+#+BEGIN_SRC ipython :results none
+    Sheets = {'Worldbank Data':'11koLGy-dWu60nVKAV8QsrwncIRZWM8IAADw4PG_Qd64',
+              'Nutrient Tables':'18EuF3OLGDB6-hb9PToJzDMfyvN8cDqEpzPmQl9leJBU',
+             }
+
+
+    # The function below adapted from Gianmario Spacagna's suggestion at
+    # https://stackoverflow.com/questions/19611729/getting-google-spreadsheet-csv-into-a-pandas-dataframe
+    def dataframe_from_gspreadsheet(sheet_name, key):
+        """Transform public google spreadsheet into pandas.DataFrame."""
+        
+        url = 'https://docs.google.com/spreadsheets/d/{key}/gviz/tq?tqx=out:csv&sheet={sheet_name}&headers=1'.format(
+            key=key, sheet_name=sheet_name.replace(' ', '%20'))
+
+        df = pd.read_csv(url)
+
+        return df.drop([col for col in df.columns if col.startswith('Unnamed')], axis=1)
+#+END_SRC
+
+** Generating Expenditures and Quantities
+   :PROPERTIES:
+   :CUSTOM_ID: generating-expenditures-and-quantities
+   :END:
+
+#+BEGIN_SRC ipython
+    #Creating Itemcode Dictionary
+    itemcodes = dataframe_from_gspreadsheet("itemcodes", Sheets['Worldbank Data']).set_index('itemcode')
+    itemcodes.to_dict()
+#+END_SRC
+
+#+results:
+:results:
+# Out[3]:
+# text/plain
+: {'item description': {101: 'RICE (PADDY)',
+:   102: 'RICE (HUSKED)',
+:   103: 'MAIZE (GREEN, COB)',
+:   104: 'MAIZE (GRAIN)',
+:   105: 'MAIZE (FLOUR)',
+:   106: 'MILLET AND SORGHUM (GRAIN)',
+:   107: 'MILLET AND SORGHUM (FLOUR)',
+:   109: 'bread',
+:   110: 'BUNS, CAKES AND BISCUITS',
+:   111: 'MACARONI, SPAGHETTI',
+:   112: 'OTHER CEREAL PRODUCTS',
+:   201: 'CASSAVA FRESH',
+:   202: 'CASSAVA DRY/FLOUR',
+:   203: 'SWEET POTATOES',
+:   204: 'YAMS/COCOYAMS',
+:   205: 'IRISH POTATOES',
+:   206: 'COOKING BANANAS, PLANTAINS',
+:   207: 'OTHER STARCHES',
+:   301: 'sugar',
+:   302: 'sweets',
+:   303: 'HONEY, SYRUPS, JAMS, MARMALADE, JELLIES, CANNED FRUITS',
+:   401: 'PEAS, BEANS, LENTILS AND OTHER PULSES',
+:   501: 'GROUNDNUTS IN SHELL/SHELLED',
+:   502: 'COCONUTS (MATURE/IMMATURE)',
+:   503: 'CASHEW, ALMONDS AND OTHER NUTS',
+:   504: 'SEEDS AND PRODUCTS FROM NUTS/SEEDS (EXCL. COOKING OIL)',
+:   601: 'ONIONS, TOMATOES, CARROTS AND GREEN PEPPER, OTHER VIUNGO',
+:   602: 'SPINACH, CABBAGE AND OTHER GREEN VEGETABLES',
+:   603: 'CANNED, DRIED AND WILD VEGETABLES',
+:   701: 'RIPE BANANAS',
+:   702: 'CITRUS FRUITS (ORANGES, LEMON, TANGERINES, ETC.)',
+:   703: 'MANGOES, AVOCADOES AND OTHER FRUITS',
+:   704: 'sugarcane',
+:   801: 'GOAT MEAT',
+:   802: 'BEEF INCLUDING MINCED SAUSAGE',
+:   803: 'PORK INCLUDING SAUSAGES AND BACON',
+:   804: 'CHICKEN AND OTHER POULTRY',
+:   805: 'WILD BIRDS AND INSECTS',
+:   806: 'OTHER DOMESTIC/WILD MEAT PRODUCTS',
+:   807: 'eggs',
+:   808: 'FRESH FISH AND SEAFOOD (INCLUDING DAGAA)',
+:   809: 'DRIED/SALTED/CANNED FISH AND SEAFOOD (INCL. DAGAA)',
+:   810: 'PACKAGE FISH',
+:   901: 'FRESH MILK',
+:   902: 'MILK PRODUCTS (LIKE CREAM, CHEESE, YOGHURT ETC)',
+:   903: 'CANNED MILK/MILK POWDER',
+:   1001: 'COOKING OIL',
+:   1002: 'BUTTER, MARGARINE, GHEE AND OTHER FAT PRODUCTS',
+:   1003: 'salt',
+:   1004: 'OTHER SPICES',
+:   1081: 'WHEAT FLOUR',
+:   1082: 'WHEAT, BARLEY GRAIN AND OTHER CEREALS',
+:   1101: 'TEA DRY',
+:   1102: 'COFFEE AND COCOA',
+:   1103: 'OTHER RAW MATERIALS FOR DRINKS',
+:   1104: 'BOTTLED/CANNED SOFT DRINKS (SODA, JUICE, WATER)',
+:   1105: 'PREPARED TEA, COFFEE',
+:   1106: 'BOTTLED BEER',
+:   1107: 'LOCAL BREWS',
+:   1108: 'WINE AND SPIRITS'}}
+:end:
+
+#+BEGIN_SRC ipython
+    x = dataframe_from_gspreadsheet("hh_sec_j1", Sheets['Worldbank Data'])
+    x.rename(columns = {'y4_hhid':'j'}, inplace = True)
+
+    # Generating expenditures df
+    expenditures = x.pivot(index = 'j', columns = 'itemcode',values = 'hh_j04').fillna(0)
+    expenditures.columns = expenditures.columns.to_series().map(itemcodes['item description'])
+    expenditures['t'] = 2015
+    expenditures['m'] = 'Tanzania'
+    expenditures = expenditures.reset_index().set_index(['j','t','m'])
+    #expenditures.head()
+
+    # Generating quantities df
+    # Right now, this is the raw quantity listed in column hh_j02_2: How much in total did your household consume in the past 7 days?
+
+    quantities = x.pivot(index = 'j', columns = 'itemcode',values = 'hh_j02_2').fillna(0)
+    quantities.columns = quantities.columns.to_series().map(itemcodes['item description'])
+    quantities['t'] = 2015
+    quantities['m'] = 'Tanzania'
+    quantities = quantities.reset_index().set_index(['j','t','m'])
+    quantities.head()
+#+END_SRC
+
+#+results:
+:results:
+# Out[4]:
+# text/plain
+: itemcode                RICE (PADDY)  RICE (HUSKED)  MAIZE (GREEN, COB)  \
+: j        t    m                                                           
+: 1000-001 2015 Tanzania           0.0            2.0                 0.0   
+: 1001-001 2015 Tanzania           0.0            4.0                 0.0   
+: 1002-001 2015 Tanzania           0.0            2.0                 0.0   
+: 1003-001 2015 Tanzania           0.0            1.0                 0.0   
+: 1005-001 2015 Tanzania           0.0            3.0                 0.0   
+: 
+: itemcode                MAIZE (GRAIN)  MAIZE (FLOUR)  \
+: j        t    m                                        
+: 1000-001 2015 Tanzania            3.0            4.0   
+: 1001-001 2015 Tanzania            0.0            4.0   
+: 1002-001 2015 Tanzania            7.0            3.0   
+: 1003-001 2015 Tanzania            1.0            7.0   
+: 1005-001 2015 Tanzania            0.0            4.0   
+: 
+: itemcode                MILLET AND SORGHUM (GRAIN)  \
+: j        t    m                                      
+: 1000-001 2015 Tanzania                         0.0   
+: 1001-001 2015 Tanzania                         0.0   
+: 1002-001 2015 Tanzania                         0.0   
+: 1003-001 2015 Tanzania                         0.0   
+: 1005-001 2015 Tanzania                         0.0   
+: 
+: itemcode                MILLET AND SORGHUM (FLOUR)  bread  \
+: j        t    m                                             
+: 1000-001 2015 Tanzania                         0.0    0.0   
+: 1001-001 2015 Tanzania                         2.0    0.0   
+: 1002-001 2015 Tanzania                         0.0  500.0   
+: 1003-001 2015 Tanzania                         1.0  400.0   
+: 1005-001 2015 Tanzania                         0.0    0.0   
+: 
+: itemcode                BUNS, CAKES AND BISCUITS  MACARONI, SPAGHETTI  \
+: j        t    m                                                         
+: 1000-001 2015 Tanzania                    1400.0                  0.0   
+: 1001-001 2015 Tanzania                       0.0                  0.0   
+: 1002-001 2015 Tanzania                       0.0                  0.0   
+: 1003-001 2015 Tanzania                       0.0                  0.0   
+: 1005-001 2015 Tanzania                       0.0                  0.0   
+: 
+: itemcode                      ...         WHEAT FLOUR  \
+: j        t    m               ...                       
+: 1000-001 2015 Tanzania        ...                 1.0   
+: 1001-001 2015 Tanzania        ...                 0.0   
+: 1002-001 2015 Tanzania        ...                 0.0   
+: 1003-001 2015 Tanzania        ...                 0.0   
+: 1005-001 2015 Tanzania        ...                 0.0   
+: 
+: itemcode                WHEAT, BARLEY GRAIN AND OTHER CEREALS  TEA DRY  \
+: j        t    m                                                          
+: 1000-001 2015 Tanzania                                    0.0     50.0   
+: 1001-001 2015 Tanzania                                    0.0     50.0   
+: 1002-001 2015 Tanzania                                    0.0     50.0   
+: 1003-001 2015 Tanzania                                    0.0     21.0   
+: 1005-001 2015 Tanzania                                    0.0    100.0   
+: 
+: itemcode                COFFEE AND COCOA  OTHER RAW MATERIALS FOR DRINKS  \
+: j        t    m                                                            
+: 1000-001 2015 Tanzania               0.0                             0.0   
+: 1001-001 2015 Tanzania               0.0                             0.0   
+: 1002-001 2015 Tanzania               0.0                             0.0   
+: 1003-001 2015 Tanzania               0.0                             0.0   
+: 1005-001 2015 Tanzania               0.0                             0.0   
+: 
+: itemcode                BOTTLED/CANNED SOFT DRINKS (SODA, JUICE, WATER)  \
+: j        t    m                                                           
+: 1000-001 2015 Tanzania                                              0.0   
+: 1001-001 2015 Tanzania                                              0.0   
+: 1002-001 2015 Tanzania                                              0.0   
+: 1003-001 2015 Tanzania                                              0.0   
+: 1005-001 2015 Tanzania                                              0.0   
+: 
+: itemcode                PREPARED TEA, COFFEE  BOTTLED BEER  LOCAL BREWS  \
+: j        t    m                                                           
+: 1000-001 2015 Tanzania                   0.0           0.0          0.0   
+: 1001-001 2015 Tanzania                   0.0           0.0          0.0   
+: 1002-001 2015 Tanzania                   0.0           0.0          0.0   
+: 1003-001 2015 Tanzania                   0.0           0.0          0.0   
+: 1005-001 2015 Tanzania                   0.0           0.0          0.0   
+: 
+: itemcode                WINE AND SPIRITS  
+: j        t    m                           
+: 1000-001 2015 Tanzania               0.0  
+: 1001-001 2015 Tanzania               0.0  
+: 1002-001 2015 Tanzania               0.0  
+: 1003-001 2015 Tanzania               0.0  
+: 1005-001 2015 Tanzania               0.0  
+: 
+: [5 rows x 60 columns]
+:end:
+
+
+
+** Demographics
+   :PROPERTIES:
+   :CUSTOM_ID: demographics
+   :END:
+
+#+BEGIN_SRC ipython
+hhroster = dataframe_from_gspreadsheet("ag_sec_01", Sheets["Worldbank Data"])
+hhroster.head()
+#+END_SRC
+
+#+results:
+:results:
+# Out[7]:
+# text/plain
+:    occ   y4_hhid  indidy4           ag01_01  ag01_02  ag01_03 ag01_04
+: 0  1.0  1000-001      1.0  **CONFIDENTIAL**     67.0      1.0       X
+: 1  2.0  1000-001      2.0  **CONFIDENTIAL**     40.0      1.0     NaN
+: 2  3.0  1000-001      3.0  **CONFIDENTIAL**     37.0      2.0     NaN
+: 3  4.0  1000-001      4.0  **CONFIDENTIAL**     32.0      1.0     NaN
+: 4  5.0  1000-001      5.0  **CONFIDENTIAL**     29.0      1.0     NaN
+
+:end:
+
+
+| Name     | Label                                  |
+|----------+----------------------------------------|
+| occ      | Case Section Roster                    |
+| y4\_hhid | Unique Household Identification NPS Y4 |
+| indidy4  | Individual ID                          |
+| ag01\_01 | Name                                   |
+| ag01\_02 | Age                                    |
+| ag01\_03 | Sex                                    |
+| ag01\_04 | 'X' = Questionnaire Respondent         |
+
+#+BEGIN_SRC python
+#Original household demographics table (sum of all in household and the corresponding log)
+size = y.iloc[0:, [1, 2]].fillna(0)
+
+data = x.iloc[0:, [1, 2, 5]].fillna(0)
+households = data['j'].unique()
+
+demographic = pd.DataFrame(index=households)
+demographic['sum'] = 0
+
+
+for i in households:
+    to_transfer = size[size['y4_hhid'] == i]
+    to_append = max(to_transfer['indidy4'].tolist())
+    demographic.loc[i] = to_append
+    #print(i)
+demographic.head()
+#test = demographic['sum'].astype('int')
+#test
+demographic['log Hsize'] = np.log(demographic['sum'].astype('int'))
+demographic.head()
+#+END_SRC
+
+#+BEGIN_EXAMPLE
+    /srv/app/venv/lib/python3.6/site-packages/ipykernel_launcher.py:19: RuntimeWarning: divide by zero encountered in log
+#+END_EXAMPLE
+
+#+BEGIN_HTML
+  <style scoped>
+      .dataframe tbody tr th:only-of-type {
+          vertical-align: middle;
+      }
+
+      .dataframe tbody tr th {
+          vertical-align: top;
+      }
+
+      .dataframe thead th {
+          text-align: right;
+      }
+  </style>
+#+END_HTML
+
+#+BEGIN_HTML
+  <table border="1" class="dataframe">
+#+END_HTML
+
+#+BEGIN_HTML
+  <thead>
+#+END_HTML
+
+#+BEGIN_EXAMPLE
+    <tr style="text-align: right;">
+      <th></th>
+      <th>sum</th>
+      <th>log Hsize</th>
+    </tr>
+#+END_EXAMPLE
+
+#+BEGIN_HTML
+  </thead>
+#+END_HTML
+
+#+BEGIN_HTML
+  <tbody>
+#+END_HTML
+
+#+BEGIN_EXAMPLE
+    <tr>
+      <th>1000-001</th>
+      <td>6.0</td>
+      <td>1.791759</td>
+    </tr>
+    <tr>
+      <th>1001-001</th>
+      <td>7.0</td>
+      <td>1.945910</td>
+    </tr>
+    <tr>
+      <th>1002-001</th>
+      <td>3.0</td>
+      <td>1.098612</td>
+    </tr>
+    <tr>
+      <th>1003-001</th>
+      <td>3.0</td>
+      <td>1.098612</td>
+    </tr>
+    <tr>
+      <th>1005-001</th>
+      <td>4.0</td>
+      <td>1.386294</td>
+    </tr>
+#+END_EXAMPLE
+
+#+BEGIN_HTML
+  </tbody>
+#+END_HTML
+
+#+BEGIN_HTML
+  </table>
+#+END_HTML
+
+** Nutrients
+   :PROPERTIES:
+   :CUSTOM_ID: nutrients
+   :END:
+
+#+BEGIN_SRC python
+    nutrients = dataframe_from_gspreadsheet("For Use in Code", Sheets['Nutrient Tables'])
+    nutrients.head()
+#+END_SRC
+
+#+BEGIN_HTML
+  <style scoped>
+      .dataframe tbody tr th:only-of-type {
+          vertical-align: middle;
+      }
+
+      .dataframe tbody tr th {
+          vertical-align: top;
+      }
+
+      .dataframe thead th {
+          text-align: right;
+      }
+  </style>
+#+END_HTML
+
+#+BEGIN_HTML
+  <table border="1" class="dataframe">
+#+END_HTML
+
+#+BEGIN_HTML
+  <thead>
+#+END_HTML
+
+#+BEGIN_EXAMPLE
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Value</th>
+      <th>Item name</th>
+      <th>energy kcal</th>
+      <th>protein g</th>
+      <th>vit a ug</th>
+      <th>vit d ug</th>
+      <th>vit e ug</th>
+      <th>vit c mg</th>
+      <th>vit b6 mg</th>
+      <th>vit b12 ug</th>
+      <th>ca mg</th>
+      <th>mg mg</th>
+      <th>fe mg</th>
+      <th>zn mg</th>
+    </tr>
+#+END_EXAMPLE
+
+#+BEGIN_HTML
+  </thead>
+#+END_HTML
+
+#+BEGIN_HTML
+  <tbody>
+#+END_HTML
+
+#+BEGIN_EXAMPLE
+    <tr>
+      <th>0</th>
+      <td>101</td>
+      <td>Rice (Paddy)</td>
+      <td>358.0</td>
+      <td>6.5</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+      <td>8.0</td>
+      <td>36.0</td>
+      <td>0.6</td>
+      <td>1.1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>102</td>
+      <td>Rice (Husked) (white grain raw)</td>
+      <td>358.0</td>
+      <td>6.5</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.1</td>
+      <td>0.0</td>
+      <td>8.0</td>
+      <td>36.0</td>
+      <td>0.6</td>
+      <td>1.1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>103</td>
+      <td>Maize (Green, Cob, immature)</td>
+      <td>59.0</td>
+      <td>1.8</td>
+      <td>7.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>18.0</td>
+      <td>0.3</td>
+      <td>0.3</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>104</td>
+      <td>Maize (Grain, dry, raw)</td>
+      <td>362.0</td>
+      <td>8.1</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.3</td>
+      <td>0.0</td>
+      <td>6.0</td>
+      <td>127.0</td>
+      <td>3.5</td>
+      <td>1.8</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>105</td>
+      <td>Maize (Flour, dry)</td>
+      <td>362.0</td>
+      <td>8.1</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.3</td>
+      <td>0.0</td>
+      <td>6.0</td>
+      <td>127.0</td>
+      <td>3.5</td>
+      <td>1.8</td>
+    </tr>
+#+END_EXAMPLE
+
+#+BEGIN_HTML
+  </tbody>
+#+END_HTML
+
+#+BEGIN_HTML
+  </table>
+#+END_HTML
+
+

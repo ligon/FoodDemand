@@ -59,7 +59,7 @@ logarithm of total household size ("log HSize").
 We begin by defining a dictionary that contains the spreadsheet key. 
 One is provided for the Indian ICRISAT example that I wish to work
 through. 
-#+begin_src ipython :results silent
+#+begin_src ipython :results silent  :tangle estimation_example.py
 Sheets = {'ICRISAT':'13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo',
          # 'Your dataset':'Your google spreadsheet key',
          }
@@ -69,7 +69,7 @@ With the spreadsheet defined , grab it and define a couple of
 dataframes. Note that the spreadsheet must be public for this approach
 to work!
 
-#+begin_src ipython :results silent
+#+begin_src ipython :results silent  :tangle estimation_example.py
 import pandas as pd
 import numpy as np
 
@@ -117,7 +117,7 @@ y.head()
 With nothing more than this, we can estimate the demand system.  This
 happens in two steps.  The first is the "reduced form" step:
 
-#+begin_src ipython  :results silent
+#+begin_src ipython  :results silent :tangle estimation_example.py
 import cfe
 
 result = cfe.Result(y=y,z=z)
@@ -200,5 +200,46 @@ vmin = np.max([v[0],v[2]])
 vmax = np.max([v[1],v[3]])
 plt.plot([vmin,vmax],[vmin,vmax])
 #+end_src
+
+
+
+** Predicting Positive Consumption
+An issue with our assessment of fit is that we /predicted/ that every
+household would consume positive quantitites of every good, and in
+making our assessment we ignored the (many) cases in which in fact the
+household had zero expenditures on that good.  
+
+Here we're going to go back and use similar framework to try and
+estimate the probability with which we'll observe zero expenditures
+as a function of \lambda, prices, and household characteristics.
+
+#+begin_src ipython :tangle no
+import matplotlib.pyplot as plt
+%matplotlib inline
+import matplotlib.cm as cm
+
+zeros_r = cfe.Result(y=(0.+(result.y>0)),z=result.z)
+weights = zeros_r.get_predicted_log_expenditures()
+
+# Truncate to make weights live in [0,1]
+weights = weights.where((weights<1) + np.isnan(weights),1).where((weights>0) + np.isnan(weights),0)
+
+xbar = np.exp(result.y).sum(['m','i']).to_dataframe('xbar').replace(0,np.nan).squeeze()
+
+# Calculate *expected* predicted expenditures, to make unconditional on being positive
+xhat = (weights*result.get_predicted_expenditures()).sum(['m','i']).to_dataframe('xhat').replace(0,np.nan).squeeze()
+
+# Make dataframe of actual & predicted
+df = pd.DataFrame({'Actual':np.log(xbar),'Predicted':np.log(xhat)})
+
+df.plot.scatter(x='Predicted',y='Actual')
+
+# Add 45 degree line
+v = plt.axis()
+vmin = np.max([v[0],v[2]])
+vmax = np.max([v[1],v[3]])
+plt.plot([vmin,vmax],[vmin,vmax])
+#+end_src
+
 
 
