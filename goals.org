@@ -37,7 +37,7 @@ The data you'll need include:
     - US Nielsen or Consumer Expenditure Survey?
 
 ** Some food conversion tables & sources
-   - https://ndb.nal.usda.gov/ndb/
+   - https://fdc.nal.usda.gov/
    - I have food conversion tables for selected rounds of the Indian NSS.
    - http://www.fao.org/infoods/infoods/tables-and-databases/en/
    - FAO: http://www.fao.org/fileadmin/templates/food_composition/documents/AnFooD2.0.xlsx
@@ -58,7 +58,9 @@ The data you'll need include:
 ** [#A] Choice of a population, with supporting expenditure data.
    This may be the most important decision you have to make.  There
    are lots of different populations that may be interesting, but data
-   exists to support a careful demand analysis only for a few populations.
+   exists to support a careful demand analysis only for a few
+   populations.  We'll help provide some "curated" datasets you can
+   use, but you're very welcome to also find your own if you wish.
 
 ** [#B] Nutritional content of different foods
    For all the foods you're considering you'll need to be able to
@@ -96,7 +98,7 @@ The data you'll need include:
    Each group will be responsible for giving a 15 minute presentation
    of the work they've accomplished during the sprint.  Be creative!
    Think of awesome new ways to help others visualize what you've
-   learned. 
+   learned.  
 
 
 

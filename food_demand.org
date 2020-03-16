@@ -12,10 +12,10 @@ import plotly.graph_objs as go
 py.init_notebook_mode(connected=True)
 
 # Uncomment for use in Jupyter Notebook
-%matplotlib widget
+#%matplotlib widget
 
 # If widget doesn't work, try this (for static images)
-#%matplotlib inline
+%matplotlib inline
 #+end_src
 * Consumer Demand for Food
  - Minimum cost model can be regarded as /prescriptive/ or
@@ -43,7 +43,7 @@ py.init_notebook_mode(connected=True)
    - US Nielsen or Consumer Expenditure Survey?
 
 ** Resources (Food conversion tables)
-   - https://ndb.nal.usda.gov/ndb/
+   - https://fdc.nal.usda.gov/
    - FAO: http://www.fao.org/fileadmin/templates/food_composition/documents/AnFooD2.0.xlsx
 
 ** Consumer's problem
