@@ -6,7 +6,7 @@ Constant Frisch Elasticity (CFE) demand systems.
 There are two prerequisites; the first is the =CFEDemands= python
 module, which can be installed with a simple:
 #+begin_src ipython :tangle no
-!pip install CFEDemands
+!pip install CFEDemands --pre
 #+end_src
 
 The second prerequisite is a dataset including detailed information on
@@ -114,6 +114,7 @@ replaced with a missing value indicator.
 y.head()
 #+end_src
 
+* Estimation
 With nothing more than this, we can estimate the demand system.  This
 happens in two steps.  The first is the "reduced form" step:
 
@@ -201,9 +202,15 @@ vmax = np.max([v[1],v[3]])
 plt.plot([vmin,vmax],[vmin,vmax])
 #+end_src
 
+** Saving Result
+You can save the estimated result, using something like
+#+begin_src ipython
+result.to_dataset('icrisat.ds')
+
+#+end_src
 
 
-** Predicting Positive Consumption
+** Predicting Positive Consumption                                 :noexport:
 An issue with our assessment of fit is that we /predicted/ that every
 household would consume positive quantitites of every good, and in
 making our assessment we ignored the (many) cases in which in fact the

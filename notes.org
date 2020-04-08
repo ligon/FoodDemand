@@ -1,0 +1,68 @@
+* Data (Google Sheets)
+  #+name: sheets
+  - Uganda :: 19ChTgcFJcOt4n5iVNiY2MLND6joj2aKZ8C8_Q7quohw
+  - Niger :: 1p1-pPd6po4MNq-nkPGzmFplbruJeOMUG_Sq-ygYCVCQ
+  - Nigeria :: 1GH9LUNs1rUY21KWwM4_UUNPsmGQek3ohFcjyqm5Bbqw
+  - Tanzania :: 1OXY8sRAn0Iu0lLMexcNTg71TWfqhu8ChPLfspKDTMPQ
+  - Malawi :: 1Q5sTtRwrDp9HvTvbybcb-yy3ZItWsAPt457mQnIcj1g
+  - Ethiopia :: 1_tteDqDLLT8QQY0CICUNS00npBmwUvJcg3PHYPNUsWI
+
+#
+  - ICRISAT :: 13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo
+
+* Generic code to read data from google sheets & estimate CFE Demands
+#+begin_src python :var SHEETS=sheets :tangle /tmp/foo.py
+import cfe
+import pandas as pd
+import numpy as np
+
+Sheets = {k:v for k,v in [s[0].split(" :: ") for s in SHEETS]}
+
+def dataframe_from_gspreadsheet(sheet_name, key):
+    """Transform public google spreadsheet into pandas.DataFrame."""
+    
+    url = 'https://docs.google.com/spreadsheets/d/{key}/gviz/tq?tqx=out:csv&sheet={sheet_name}&headers=1'.format(
+        key=key, sheet_name=sheet_name.replace(' ', '%20'))
+
+    print(url)
+    df = pd.read_csv(url,dtype={'j':str})
+
+    df.columns = [c.strip() for c in df.columns.tolist()]
+
+    df = df.loc[:,~df.columns.duplicated(keep='first')]   
+
+    df = df.drop([col for col in df.columns if col.startswith('Unnamed')], axis=1)
+
+    df = df.loc[~df.index.duplicated(), :]
+
+    return df
+
+
+for k,v in Sheets.items():
+    print(k)
+    x = dataframe_from_gspreadsheet("Expenditures", Sheets[k])
+
+    z = dataframe_from_gspreadsheet("HH Characteristics", Sheets[k])
+
+    # If no 'm' index assume a single market:
+    if 'm' not in z.index.names:
+        z['m'] = 1
+        x['m'] = 1
+        z = z.set_index(['j','t','m'])
+        x = x.set_index(['j','t','m'])
+
+    x = x.loc[~x.index.duplicated(), :]
+    z = z.loc[~z.index.duplicated(), :]
+
+    # Take logs of expenditures; call this y
+    y = np.log(x.replace(0, np.nan))
+    result = cfe.Result(y=y, z=z, verbose=True)
+
+    result.get_reduced_form()
+    result.get_beta()
+    result.get_alpha()
+
+    result.to_dataset('./%s.ds' % k)
+
+#+end_src
+

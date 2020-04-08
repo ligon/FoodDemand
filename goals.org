@@ -92,7 +92,6 @@ The data you'll need include:
 
    Think of other counterfactual experiments that might be interesting.
 
-
 ** [#A] Presentation
 
    Each group will be responsible for giving a 15 minute presentation
