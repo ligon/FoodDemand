@@ -189,7 +189,6 @@ Ldict = OrderedDict(sorted([(s[0],((s[1][0]-1,s[1][1]-1),s[2])) for s in Ldict],
 Lcols = OrderedDict(sorted([(s[0],s[1][0]) for s in Ldict.items()], key = lambda t: t[1][0]))
 Ltypes = {k:v[1] for k,v in Ldict.items()}
 
-
 L = [pd.read_fwf('~/Data/VLS/MyVLS/VLS1/L/%s' % v,list(Lcols.values()),dtype=Ltypes) for v in ['aur','shi','kan']]
 
 L[0].columns = list(Ldict.keys())
@@ -210,6 +209,8 @@ L['HHID'] = ['%s%d' % l for l in zip(L.village,L.hhno.fillna(0))]
 L.to_pickle('l.df')
 
 #+end_src
+
+#+results:
 
 ** Expenditures and Quantities
 #+begin_src python :var codes=food_codes :tangle expenditures.py
@@ -583,6 +584,93 @@ fct = fct.fillna(0)
 fct.to_pickle('fct.df')
 #+end_src
 
+#+results:
+|    | Code | NSS Item                                          | ICRISAT Food Label                  | Food Label                          |
+|----+------+---------------------------------------------------+-------------------------------------+-------------------------------------|
+|  0 |  102 | rice  other sources                           | Paddy (Local variety)               | Rice                                |
+|  1 |  102 | rice  other sources                           | Paddy (HYV)                         | Rice                                |
+|  2 |  102 | rice  other sources                           | Rice (local variety)                | Rice                                |
+|  3 |  102 | rice  other sources                           | Rice (HYV variety)                  | Rice                                |
+|  4 |  108 | wheat/atta  other sources                     | Wheat (Local variety)               | Wheat                               |
+|  5 |  108 | wheat/atta  other sources                     | Wheat (HYV)                         | Wheat                               |
+|  6 |  115 | jowar & products                                  | Jowar/Sorghum (Local variety)       | Jowar/Sorghum                       |
+|  7 |  115 | jowar & products                                  | Jowar/Sorghum (HYV)                 | Jowar/Sorghum                       |
+|  8 |  116 | bajra & products                                  | Bajra/Pearl millet (Local variety)  | Bajra/Pearl millet                  |
+|  9 |  116 | bajra & products                                  | Bajra/Pearl millet (HYV)            | Bajra/Pearl millet                  |
+| 10 |  117 | maize & products                                  | Maize (Local variety)               | Maize                               |
+| 11 |  117 | maize & products                                  | Maize (HYV)                         | Maize                               |
+| 12 |  120 | small millets & products                          | Other minor millets                 | Other minor millets                 |
+| 13 |  121 | ragi & products                                   | Ragi/Finger millet                  | Ragi/Finger millet                  |
+| 14 |  122 | other cereals                                     | Other cereals                       | Other cereals                       |
+| 15 |  142 | gram (whole)                                      | Redgram (Tur)/Pigeonpea             | Redgram (Tur)/Pigeonpea             |
+| 16 |  142 | gram (whole)                                      | Blackgram (Urad)                    | Blackgram (Urad)                    |
+| 17 |  142 | gram (whole)                                      | Bengalgram (Chenna)/Chickpea        | Bengalgram (Chenna)/Chickpea        |
+| 18 |  142 | gram (whole)                                      | Redgram dhal                        | Redgram dhal                        |
+| 19 |  142 | gram (whole)                                      | Blackgram dhal                      | Blackgram dhal                      |
+| 20 |  142 | gram (whole)                                      | Bengalgram dhal                     | Bengalgram dhal                     |
+| 21 |  143 | moong                                             | Greengram (Mung)                    | Greengram (Mung)                    |
+| 22 |  143 | moong                                             | Greengram dhal                      | Greengram dhal                      |
+| 23 |  146 | peas                                              | Cowpea                              | Cowpea                              |
+| 24 |  148 | other pulses                                      | Soybean                             | Soybean                             |
+| 25 |  148 | other pulses                                      | Other pulses                        | Other pulses                        |
+| 26 |  148 | other pulses                                      | Other dhal                          | Other dhal                          |
+| 27 |  160 | milk: liquid                                      | Milk                                | Milk                                |
+| 28 |  163 | curd                                              | Other milk products like curd, etc. | Other milk products like curd, etc. |
+| 29 |  164 | ghee                                              | Ghee                                | Ghee                                |
+| 30 |  172 | sugar  other sources                          | Sugarcane                           | Sugarcane                           |
+| 31 |  172 | sugar  other sources                          | Sugar                               | Sugar                               |
+| 32 |  172 | sugar  other sources                          | Other sugar products                | Other sugar products                |
+| 33 |  173 | gur                                               | Gur (jaggery)                       | Gur (jaggery)                       |
+| 34 |  181 | mustard oil                                       | Mustard                             | Mustard                             |
+| 35 |  182 | groundnut oil                                     | Groundnut oil                       | Edible oils                         |
+| 36 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Sunflower                           | Sunflower                           |
+| 37 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower                           | Safflower                           |
+| 38 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower oil                       | Edible oils                         |
+| 39 |  185 | edible oil: others                                | Edible oils                         | Edible oils                         |
+| 40 |  185 | edible oil: others                                | Linseed                             | Linseed                             |
+| 41 |  185 | edible oil: others                                | Linseed Oil                         | Edible oils                         |
+| 42 |  190 | eggs                                              | Eggs                                | Eggs                                |
+| 43 |  191 | fish, prawn                                       | Fish                                | Fish                                |
+| 44 |  192 | goat meat/mutton                                  | Goat                                | Goat                                |
+| 45 |  192 | goat meat/mutton                                  | Sheep                               | Sheep                               |
+| 46 |  193 | beef/ buffalo meat                                | Bullocks                            | Beef                                |
+| 47 |  193 | beef/ buffalo meat                                | Cow                                 | Beef                                |
+| 48 |  193 | beef/ buffalo meat                                | Young Cattle (under 3 years)        | Beef                                |
+| 49 |  193 | beef/ buffalo meat                                | He buffalo                          | Buffalo                             |
+| 50 |  193 | beef/ buffalo meat                                | She buffalo                         | Buffalo                             |
+| 51 |  194 | pork                                              | Pig                                 | Pig                                 |
+| 52 |  195 | chicken                                           | Poultry birds                       | Poultry birds                       |
+| 53 |  200 | potato (includes sweet potato and green plantain) | Potato                              | Potato                              |
+| 54 |  201 | onion                                             | Onion                               | Onion                               |
+| 55 |  202 | tomato                                            | Tomato                              | Tomato                              |
+| 56 |  203 | brinjal                                           | Brinjal                             | Brinjal                             |
+| 57 |  206 | palak/other leafy vegetables                      | Leafy vegetables                    | Leafy vegetables                    |
+| 58 |  207 | chillis: green                                    | Chillies                            | Chillies                            |
+| 59 |  212 | cabbage                                           | Cabbage                             | Cabbage                             |
+| 60 |  216 | lemon                                             | Lemon                               | Lemon                               |
+| 61 |  217 | other vegetables (rural)                          | Other vegetables                    | Other vegetables                    |
+| 62 |  217 | other vegetables (urban)                          | Other vegetables                    | Other vegetables                    |
+| 63 |  220 | banana                                            | Banana                              | Banana                              |
+| 64 |  224 | coconut                                           | Coconut                             | Coconut                             |
+| 65 |  228 | orange, mausami                                   | Orange                              | Orange                              |
+| 66 |  231 | mango                                             | Mango                               | Mango                               |
+| 67 |  237 | grapes                                            | Grapes                              | Grapes                              |
+| 68 |  238 | other fresh fruits (rural)                        | Other Fruits                        | Other Fruits                        |
+| 69 |  238 | other fresh fruits (urban)                        | Other Fruits                        | Other Fruits                        |
+| 70 |  241 | groundnut                                         | Groundnuts                          | Groundnuts                          |
+| 71 |  260 | oilseeds                                          | Sesamum                             | Sesamum                             |
+| 72 |  260 | oilseeds                                          | Other oilseeds                      | Other oilseeds                      |
+| 73 |  261 | other spices                                      | Fennel                              | Fennel                              |
+| 74 |  261 | other spices                                      | Other spices                        | Other spices                        |
+| 75 |  271 | tea : leaf                                        | Tea                                 | Tea                                 |
+| 76 |  272 | coffee : cups                                     | Coffee                              | Coffee                              |
+| 77 |  280 | cooked meals purchased                            | Meals                               | Meals                               |
+| 78 |  280 | cooked meals purchased                            | Complete meals in hotel             | Complete meals in hotel             |
+| 79 |  296 | other packaged processed food (rural)             | Various processed foods             | Various processed foods             |
+| 80 |  296 | other packaged processed food (urban)             | Various processed foods             | Various processed foods             |
+| 81 |  301 | pan: finished                                     | Pan, betel, etc.                    | Pan, betel, etc.                    |
+
+
 #+name: tab:nss_and_icrisat_foods
 |    | Code | NSS Item                                          | ICRISAT Food Label                  | Food Label                          |
 |----+------+---------------------------------------------------+-------------------------------------+-------------------------------------|
@@ -677,7 +765,7 @@ fct.to_pickle('fct.df')
 
 
 ** Calculate ICRISAT Nutrients & Standardized Quantities
-#+begin_src ipython :tangle nutrients.py
+#+begin_src python :tangle nutrients.py
 import pandas as pd
 import numpy as np
 
@@ -794,7 +882,7 @@ myP0.to_pickle('prices.df')
 
 
 * Demographics from Schedule C
-#+begin_src ipython :tangle c.py
+#+begin_src python :tangle c.py
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
@@ -852,7 +940,6 @@ z = z.reorder_levels(['j','t','m'])
 z.to_pickle('z.df')
 
 #+end_src
-
 
 
 
@@ -917,7 +1004,7 @@ print(spread.sheets)
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'Household Characteristics' id:1760828959>]
 
 * Estimating Demands
-#+begin_src ipython :tangle estimation.py
+#+begin_src python :tangle estimation.py
 import pandas as pd
 import cfe
 import numpy as np
@@ -926,20 +1013,27 @@ z = pd.read_pickle('z.df')
 
 y = pd.read_pickle('y.df')
 
+y = y.query("m in ['A','C','E']")
+y = y.loc[:,y.count()>10]
+
 prices = pd.read_pickle('prices.df')
+prices = prices.loc[:,prices.columns.isin(y.columns)]
 
 #y = np.log(pd.read_pickle('q.df').replace(0,np.nan))
 
-result = cfe.Result(y=y,z=z,prices=prices)
+#result = cfe.Result(y=y,z=z,prices=prices,verbose=True)
+result = cfe.Result(y=y,z=z,verbose=True)
 
 result.get_predicted_log_expenditures()
 result.get_loglambdas()
 result.get_alpha()
 
-result.to_dataset('result.ds')
+result.to_dataset('icrisat.ds')
 
 #print(cfe.df_utils.df_to_orgtbl(result.beta.to_dataframe().sort_values('beta',ascending=False)))
 #+end_src
+
+#+results:
 
 #+begin_src ipython
 print(result.prices.coords['i'])
