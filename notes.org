@@ -77,7 +77,8 @@ import cfe
 import pandas as pd
 import numpy as np
 
-Sheets = {"Uganda":{"Expenditures":"1mZcHvSD55wGCicdqxbEnioE3AOXM_pVb6zVwHhtBzSk",
+Sheets = {"Indian ICRISAT":"13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo",
+          "Uganda":{"Expenditures":"1mZcHvSD55wGCicdqxbEnioE3AOXM_pVb6zVwHhtBzSk",
                     "HH Characteristics":"1mZcHvSD55wGCicdqxbEnioE3AOXM_pVb6zVwHhtBzSk",
                     "Consumption":"1RT5AfbZbWx-CmNaOHLp7aD9qEjgjiBv8lZmPexuKEWg"},
           "Ethiopia":"1tVyKqfI_t7KWmx69Gmj15RyU3_amqf-M0P8hgA9pNi0",
@@ -88,9 +89,7 @@ Sheets = {"Uganda":{"Expenditures":"1mZcHvSD55wGCicdqxbEnioE3AOXM_pVb6zVwHhtBzSk
           "Nigeria":{"Expenditures":"17L5cDhXRLNAckP3JvBLTLSYIguFqP2ebMvQLH96c0n4",
                      "HH Characteristics":"17L5cDhXRLNAckP3JvBLTLSYIguFqP2ebMvQLH96c0n4",
                      "Consumption":"1kG_fVBmj9EEF9LOwxN30HBxkQENOoWeQjVPYzMJe3b4"},
-          "Tanzania":"1QqfWnizPaIyMEspa3NcOS-oDP21EV-4RE-CIIY-7Tuc",
-          "Indian ICRISAT":"13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo"}
-
+          "Tanzania":"1QqfWnizPaIyMEspa3NcOS-oDP21EV-4RE-CIIY-7Tuc"}
 
 
 def dataframe_from_gspreadsheet(sheet_name, key):
@@ -172,6 +171,7 @@ for k,v in Sheets.items():
                    z=z,
                    prices=p.T, verbose=True)
 
+
     r.to_dataset('%s.ds' % k)
 
     # Fill out the result
@@ -182,7 +182,7 @@ for k,v in Sheets.items():
 
     # Eliminate some expensive arrays
 
-    r.drop_vars(['y','ce','cehat']).to_dataset('./%s.ds' % k)
+    r.drop_vars(['y','ce','cehat']).to_dataset('/tmp/%s_small.ds' % k)
 
     r.to_dataset('%s.ds' % k)
 
