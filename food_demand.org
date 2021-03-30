@@ -44,7 +44,8 @@ py.init_notebook_mode(connected=True)
 
 ** Resources (Food conversion tables)
    - https://ndb.nal.usda.gov/ndb/
-   - FAO: http://www.fao.org/fileadmin/templates/food_composition/documents/AnFooD2.0.xlsx
+   - FAO :: http://www.fao.org/fileadmin/templates/food_composition/documents/AnFooD2.0.xlsx
+   - Pacific Islands :: https://sdd.spc.int/innovation-sdd/matching-consumption-classification-food-composition-tables-facilitate-poverty-and-0
 
 ** Consumer's problem
    The basic consumer's problem considers the problem of allocating a
@@ -85,6 +86,7 @@ py.init_notebook_mode(connected=True)
     mathematical form as a way of modeling [[https://en.wikipedia.org/wiki/Cobb%25E2%2580%2593Douglas_production_function][production]].  
 
 #+begin_src ipython :tangle cobb_douglas.py
+#pip install CFEDemands
 from cfe import demands
 
 # Cobb-Douglas utility is a special case of a more general class
