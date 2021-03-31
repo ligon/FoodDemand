@@ -1,8 +1,10 @@
 #+Title: Food Demand Project
 #+Author: Ethan Ligon
 #+EPRESENT_FRAME_LEVEL: 3
-#+OPTIONS: toc:nil pri:t
+#+OPTIONS: toc:nil pri:t H:2
 
+* Overview
+** Motivation & Overview
 This project is about understanding people's /choices/ about what food
 to eat (and how much).  Sometimes these choices may lead to
 inexpensive, nutritious diets, but certainly not always!  
@@ -12,29 +14,30 @@ budget, and prices.  The overall goal of the project is to be able to
 give a clear characterization of this relationship for some particular
 real-world population.
 
-One of the chief challenges of the project is finding adequate data.
-The data you'll need include:
+** Data requirements
+ One of the chief challenges of the project is finding adequate data.
+ The data you'll need include:
 
-     - Detailed data on food consumption or expenditures;
-     - Data on household or individual characteristics that may
-       influence demand (e.g., household size & composition);
-     - A food conversion table, to allow mapping quantities of food
-       into nutritional outcomes.
+      - Detailed data on food consumption or expenditures;
+      - Data on household or individual characteristics that may
+        influence demand (e.g., household size & composition);
+      - A food conversion table, to allow mapping quantities of food
+        into nutritional outcomes.
 
 * Resources
+
+** Some Food Expenditure/Consumption Datasets
   Here are some data sources that you may find useful.  This is by no
   means exhaustive.  Though if you find some other source that seems
   interesting please discuss with me (I may know of some problems or
   issues with the dataset).
-
-** Some Food Expenditure/Consumption Datasets
     - [[https://docs.google.com/spreadsheets/d/13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo/][ICRISAT Expenditure Data]] (This one is mine)
     - Philippine (Mindanao) Individual Food Consumption
     - Indian NSS
     - Malawi IHS (See appendix of [[http://ebrary.ifpri.org/utils/getfile/collection/p15738coll2/id/128205/filename/128416.pdf][this IFPRI working paper]])
     - Indonesian Family Life Survey
     - http://surveys.worldbank.org/lsms
-    - US Nielsen or Consumer Expenditure Survey?
+    - Nigerian LSMS
 
 ** Some food conversion tables & sources
    - https://fdc.nal.usda.gov/
@@ -43,6 +46,7 @@ The data you'll need include:
    - FAO: http://www.fao.org/fileadmin/templates/food_composition/documents/AnFooD2.0.xlsx
 
 * Deliverables
+** Deliverables
   I'll work through a simple example in class (people in selected
   South Indian villages).
 
@@ -55,14 +59,14 @@ The data you'll need include:
    - C :: These deliverables would be
           /nice to have/.
 
-** [#A] Choice of a population, with supporting expenditure data.
+** (A) Choice of a population, with supporting expenditure data.
    This may be the most important decision you have to make.  There
    are lots of different populations that may be interesting, but data
    exists to support a careful demand analysis only for a few
    populations.  We'll help provide some "curated" datasets you can
    use, but you're very welcome to also find your own if you wish.
 
-** [#B] Nutritional content of different foods
+** (B) Nutritional content of different foods
    For all the foods you're considering you'll need to be able to
    describe their nutritional content, in terms that allow you to
    compare with recommended daily allowances.  We'll provide pointers
@@ -70,34 +74,39 @@ The data you'll need include:
    their own recommendations, which may be better suited to their
    populations.
 
-** [#B] "Engel's Law" 
+** (B) "Engel's Law" 
    Engel is famous for the proposition that the share of food in a
    household's budget falls with the overall size of the budget.  What
    can you say about the validity of Engel's Law in the context of
    your population?
 
-** [#B] Nutritional adequacy of diet
+** (B) Nutritional adequacy of diet
    Given the food actually consumed in your data, what can you say
    about the adequacy of the diets in the population you're studying?
    What proportion of households consume enough so that members will
    exceed dietary recommendations?  What proportion do not?  
 
-** [#A] Estimate Demand System
+** (A) Estimate Demand System
    Estimate a system of demands for different kinds of food.
    Characterize how consumption varies with household need.
 
-** [#C] Counterfactual Experiments
+** (C) Counterfactual Experiments
    If everyone's total food expenditures doubled (holding prices
-   fixed) how would this affect nutrition in the population?
+   fixed) how would this affect nutrition in the population?  What if
+   relative food prices changed?
 
    Think of other counterfactual experiments that might be interesting.
 
-** [#A] Presentation
+** (A) Presentation
 
    Each group will be responsible for giving a 15 minute presentation
-   of the work they've accomplished during the sprint.  Be creative!
+   of the work they've accomplished.  Be creative!
    Think of awesome new ways to help others visualize what you've
    learned.  
+
+** (A) Code Review
+   As in the last project, each team will be responsible for providing
+   a code review/replication of the projects of two other teams.
 
 
 
