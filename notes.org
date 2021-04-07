@@ -1,15 +1,23 @@
 * Data (Google Sheets)
   #+name: sheets
   - Uganda :: 1mZcHvSD55wGCicdqxbEnioE3AOXM_pVb6zVwHhtBzSk
-#
   - Niger :: 1p1-pPd6po4MNq-nkPGzmFplbruJeOMUG_Sq-ygYCVCQ
   - Nigeria :: 1GH9LUNs1rUY21KWwM4_UUNPsmGQek3ohFcjyqm5Bbqw
   - Tanzania :: 1OXY8sRAn0Iu0lLMexcNTg71TWfqhu8ChPLfspKDTMPQ
   - Malawi :: 1Q5sTtRwrDp9HvTvbybcb-yy3ZItWsAPt457mQnIcj1g
   - Ethiopia :: 1_tteDqDLLT8QQY0CICUNS00npBmwUvJcg3PHYPNUsWI
-
-
+  - Philippines :: 
   - ICRISAT :: 13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo
+
+* Food Conversion Tables
+  - Uganda :: https://www.harvestplus.org/node/562
+  - Tanzania :: https://cdn1.sph.harvard.edu/wp-content/uploads/sites/30/2012/10/tanzania-food-composition-tables.pdf
+  - Malawi :: https://drive.google.com/drive/u/1/folders/1Q7liHqmld4ngNlHejgBgV_AR0V7dIPeb
+  - Nigeria ::
+  -  :: 
+  - India :
+  - East Asia :: 
+  - West Africa :: 
 
 * Generic code to read data from google sheets & estimate CFE Demands
 #+begin_src python :var SHEETS=sheets :tangle /tmp/foo.py

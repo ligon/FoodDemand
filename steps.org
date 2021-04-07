@@ -1,0 +1,252 @@
+* Introduction
+Here we give a set of generic instructions for analyzing demand for
+food and nutrition.  Inputs include a datasets of consumption
+quantities, consumption expenditures, household characteristics, and a
+food conversion table.
+
+The different datasets should be indexed as follows:
+
+   | Dataset            | Indexed by | Columns |
+   |--------------------+------------+---------|
+   | Expenditures       | j,t,m      | i       |
+   | Consumption        | j,t,m,u    | i       |
+   | HH Characteristics | j,t,m      | k       |
+   | FCT                | i,u        | n       |
+   | RDI                | n          | k       |
+
+where =j= indexes households, =t= indexes periods, =m= indexes
+markets, =i= indexes goods, =k= indexes different kinds of household
+characteristics, =u= indexes different unit names, and =n= indexes
+different nutrients.  Finally, any RDI ("recommended daily intake")
+tables should be indexed by nutrients, with columns corresponding to
+characteristics of persons within the household (e.g., age & sex
+categories).
+
+Note that some countries have more than one dataframe of consumption,
+distinguished by source; for example Malawi has consumption items
+purchased as well as consumption items produced.  Here we focus on
+consumption purchases, since one of our immediate aims is to infer
+prices paid.
+
+** Step 1: Acquire DataFrames
+
+Here are addresses of google sheets for different dataframes for the
+case of Niger:
+#+begin_src ipython :tangle /tmp/foo.py
+InputFiles = {'Expenditures':('1ySP8lrXlQ2ChaMdz0HQY85Md65cRRKOZgz-T0zBN2K0','Expenditures'),
+              'Consumption':('1kr2NI57xiTQm20A_68NEcLKihVTJw2ZgWCwV98ZD4JE','Consumption'),
+              'HH Characteristics':('1ySP8lrXlQ2ChaMdz0HQY85Md65cRRKOZgz-T0zBN2K0','HH Characteristics'),
+              'FCT':('1TM7FpKURXFAuXW4dLpGt98QA2CH4WTDty-4nPOUv1Mg','05 NV_sum_57 (per 100g EP)')}
+#+end_src
+
+Note that the food items for the FCT for Niger are *not* yet matched
+up with food labels indexed by =i= in the expenditure and consumption datasets.
+
+#+begin_src ipython :tangle /tmp/foo.py
+from eep153_tools import read_sheets
+import numpy as np
+import pandas as pd
+
+def get_clean_sheet(key,json_creds,sheet=None):
+
+    df = read_sheets(key,json_creds,sheet)
+    df.columns = [c.strip() for c in df.columns.tolist()]
+
+    df = df.loc[:,~df.columns.duplicated(keep='first')]   
+
+    df = df.drop([col for col in df.columns if col.startswith('Unnamed')], axis=1)
+
+    df = df.loc[~df.index.duplicated(), :]
+
+    return df
+
+# Get expenditures...
+x = get_clean_sheet(InputFiles['Expenditures'][0],
+                    json_creds='../students-9093fa174318.json',
+                    sheet=InputFiles['Expenditures'][1])
+
+if 'm' not in x.columns:
+    x['m'] = 1
+
+x = x.set_index(['j','t','m'])
+x.columns.name = 'i'
+
+x = x.apply(lambda x: pd.to_numeric(x,errors='coerce'))
+x = x.replace(0,np.nan)
+
+# Get HH characteristics...
+z = get_clean_sheet(InputFiles['HH Characteristics'][0],
+                    json_creds='../students-9093fa174318.json',
+                    sheet=InputFiles['HH Characteristics'][1])
+
+if 'm' not in z.columns:
+    z['m'] = 1
+
+z = z.set_index(['j','t','m'])
+z.columns.name = 'k'
+
+z = z.apply(lambda x: pd.to_numeric(x,errors='coerce'))
+
+# Get purchased consumption quantities
+q = get_clean_sheet(InputFiles['Consumption'][0],
+                    json_creds='../students-9093fa174318.json',
+                    sheet=InputFiles['Consumption'][1])
+
+if 'm' not in q.columns:
+    q['m'] = 1
+
+q = q.set_index(['j','t','m','u'])
+q.columns.name = 'i'
+
+q = q.apply(lambda x: pd.to_numeric(x,errors='coerce'))
+q = q.replace(0,np.nan)
+
+fct = get_clean_sheet(InputFiles['FCT'][0],
+                    json_creds='../students-9093fa174318.json',
+                    sheet=InputFiles['FCT'][1])
+
+#+end_src
+
+** Step 2: Estimate Demand System
+
+Here, use data on log /expenditures/ and household characteristics to
+create a CFEDemand =result=.
+#+begin_src ipython :tangle /tmp/foo.py
+import cfe
+
+result = cfe.Result(y=np.log(x),z=z)
+
+# Estimates most things (not counting std errors for betas).
+xhat = result.get_predicted_expenditures() 
+
+result.get_beta(as_df=True) # Check sanity...
+#+end_src
+
+
+** Step 3: Infer prices
+
+Next, we divide predicted expenditures by actual quantities to get
+prices, then choose prices corresponding to some units (e.g.,
+kilograms) we can map into the  FCT.
+
+#+begin_src ipython :tangle /tmp/foo.py
+
+# xhat is an xarray; change q
+q = q.to_xarray().to_array('i')
+phat = (xhat/q).to_dataframe('p').squeeze().unstack('i')
+
+# Keep kgs; g
+phat = phat.xs('kg',level='u').groupby(['t','m']).median().dropna(how='all')
+#+end_src
+
+
+** Step 4: Get predicted quantities
+Now divide predicted expenditures by predicted prices to get predicted
+quantities, and put back into a dataframe.
+#+begin_src ipython :tangle /tmp/foo.py
+qhat = xhat/phat.to_xarray().to_array('i')
+
+qhat = qhat.to_dataframe('q').unstack('i')
+
+qhat.columns = qhat.columns.droplevel(0)
+#+end_src
+
+
+** Step 5: Map predicted quantities into nutrients
+
+May need some work to clean up the FCT, and create food names/indices
+corresponding to the =i= index in =qhat=.
+
+#+begin_src ipython :results output raw 
+print(pd.Series(xhat.coords['i']).to_markdown())
+
+#+end_src
+
+
+#+name: niger_codes
+| Niger Labels                | WAFCT Codes |
+|-----------------------------+-------------|
+| Baobab leaves               | 04_001      |
+| Bean fritters               | 03_054      |
+| Beans                       | 03_022      |
+| Beef                        | 07_014      |
+| Biscuit                     | 01_188      |
+| Bowl of millet with milk    | 01_174      |
+| Bowl of millet without milk | 01_167      |
+| Bread                       | 01_047      |
+| Cakes                       | 01_187      |
+| Cassava tuber               | 02_021      |
+| Cigarette                   |             |
+| Coffee in cans              | 12_009      |
+| Cola nut                    | 06_018      |
+| Corn                        | 04_109      |
+| Corn fritters               | 01_123      |
+| Cornstarch                  |             |
+| Curd                        | 10_028      |
+| Dates                       | 05_031      |
+| Dry okra                    | 04_077      |
+| Eggs                        | 08_001      |
+| Fresh Okra                  | 04_017      |
+| Fresh Onion                 | 04_018      |
+| Fresh fish                  | 09_060      |
+| Fresh pepper                | 04_049      |
+| Fresh tomato                | 04_021      |
+| Fruit juice                 | 12_013      |
+| Goat meat                   | 07_069      |
+| Groundnut cake              | 03_012      |
+| Juice powder                |             |
+| Maggi cube                  |             |
+| Malahya                     |             |
+| Millet                      | 01_095      |
+| Mutton                      | 07_004      |
+| Orange                      | 05_016      |
+| Other citrus                |             |
+| Other spices                |             |
+| Palm oil                    | 11_007      |
+| Pasta                       | 01_077      |
+| Peanut butter               | 06_023      |
+| Peanut oil                  | 11_003      |
+| Pimento                     |             |
+| Potato                      | 02_009      |
+| Poultry                     | 08_010      |
+| Powdered milk               | 10_002      |
+| Rice                        | 01_065      |
+| Rice &tomato sauce          |             |
+| Rice cowpea                 | 03_143      |
+| Salad                       |             |
+| Salt                        | 13_015      |
+| Soft Drinks                 | 12_024      |
+| Soumbala                    | 03_042      |
+| Squash                      | 04_051      |
+| Sugar                       | 13_002      |
+| Sugar cane                  |             |
+| Sweet banana                | 05_048      |
+| Sweet potato                | 02_049      |
+| Tea bag                     | 12_008      |
+| Tomato paste                | 04_066      |
+| Yam tuber                   | 02_019      |
+| Yodo                        |             |
+| Yogurt                      | 10_005      |
+
+
+These particular clean-ups are peculiar to the West African FCT.
+#+begin_src ipython
+# Dictionary mapping index i to fct codes
+i_to_fct = pd.read_csv('niger_fct_codes.csv').dropna().set_index('Niger Labels').squeeze().to_dict()
+
+fct = fct.loc[fct.Code.str.len()==6]
+fct = fct.set_index('Code')
+fct.index.name = 'i'
+
+myq=qhat.rename(columns=i_to_fct)[list(i_to_fct.values())]
+myfct=fct.loc[myq.columns].iloc[:,8:] # Drop columns which aren't nutrients
+#+end_src
+
+
+Before this will work, need columns of qhat to match columns of fct.
+#+begin_src ipython
+
+nutrients = myq@myfct
+
+#+end_src
+** Step 6: Compare nutrients to Recommended Daily Intakes (RDI)

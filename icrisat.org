@@ -267,7 +267,7 @@ X = X.unstack('i')
 
 X.to_pickle('x.df')
 
-y = np.log(X)
+y = np.log(X.replace(0,np.nan))
 
 #y.index.names = ['m','t','j']
 #y = y.reorder_levels(['j','t','m'])
@@ -671,6 +671,7 @@ fct.to_pickle('fct.df')
 | 81 |  301 | pan: finished                                     | Pan, betel, etc.                    | Pan, betel, etc.                    |
 
 
+
 #+name: tab:nss_and_icrisat_foods
 |    | Code | NSS Item                                          | ICRISAT Food Label                  | Food Label                          |
 |----+------+---------------------------------------------------+-------------------------------------+-------------------------------------|
@@ -876,9 +877,6 @@ myP0.to_pickle('prices.df')
 #+end_src
 
 #+results:
-:results:
-# Out[2]:
-:end:
 
 
 * Demographics from Schedule C
@@ -940,6 +938,8 @@ z = z.reorder_levels(['j','t','m'])
 z.to_pickle('z.df')
 
 #+end_src
+
+#+results:
 
 
 
@@ -1014,12 +1014,21 @@ z = pd.read_pickle('z.df')
 y = pd.read_pickle('y.df')
 
 y = y.query("m in ['A','C','E']")
+
 y = y.loc[:,y.count()>10]
 
 prices = pd.read_pickle('prices.df')
 prices = prices.loc[:,prices.columns.isin(y.columns)]
 
 #y = np.log(pd.read_pickle('q.df').replace(0,np.nan))
+
+# Treat as single unit
+y = y.reset_index()
+y['m']='SAT'
+y = y.set_index(['j','t','m'])
+z = z.reset_index()
+z['m']='SAT'
+z = z.set_index(['j','m','t'])
 
 #result = cfe.Result(y=y,z=z,prices=prices,verbose=True)
 result = cfe.Result(y=y,z=z,verbose=True)
@@ -1034,6 +1043,46 @@ result.to_dataset('icrisat.ds')
 #+end_src
 
 #+results:
+min_proportion_items test drops 274 households.
+Dropping Coffee.
+Dropping Cotton.
+Dropping Cowpea.
+Dropping Grapes.
+Dropping Other.
+Dropping Other Food.
+Dropping Other livestock.
+Dropping Other milk products like curd, etc..
+Dropping Potato.
+Dropping QC.
+Dropping Safflower.
+Dropping ZK.
+Dropping QJ.
+Dropping Meals.
+Dropping Sheep.
+Dropping GN.
+Dropping Sesamum.
+Dropping Other cereals.
+Dropping Orange.
+Dropping Other minor millets.
+Dropping Leafy vegetables.
+Dropping Castor.
+Dropping Blackgram dhal.
+Dropping Medicine, cosmetics, etc..
+Dropping Beef.
+Dropping Lemon.
+Dropping Other Clothing.
+Dropping Other pulses.
+Dropping Maize.
+Dropping Cabbage.
+Dropping Sugarcane.
+Dropping Blackgram (Urad).
+Dropping Greengram (Mung).
+Dropping Bengalgram (Chenna)/Chickpea.
+Dropping Educational expenses (fees).
+Dropping Redgram (Tur)/Pigeonpea.
+Dropping Greengram dhal.
+drop_columns_wo_covariance test drops 0 households and 37 goods.
+good in every (t,m) test drops 0 households and 16 goods.
 
 #+begin_src ipython
 print(result.prices.coords['i'])

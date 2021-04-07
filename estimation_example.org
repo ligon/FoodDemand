@@ -6,7 +6,10 @@ Constant Frisch Elasticity (CFE) demand systems.
 There are two prerequisites; the first is the =CFEDemands= python
 module, which can be installed with a simple:
 #+begin_src ipython :tangle no
-!pip install CFEDemands --pre
+!pip install CFEDemands --upgrade
+!pip install xarray
+!pip install dvc
+!pip install oauth2client
 #+end_src
 
 The second prerequisite is a dataset including detailed information on
@@ -71,6 +74,7 @@ keys.
 #+begin_src ipython :results silent  :tangle estimation_example.py
 import pandas as pd
 import numpy as np
+import sys
 from eep153_tools import read_sheets
 
 #### Need private keys from json file (we're authenticating using "service accounts")
