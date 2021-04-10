@@ -1,3 +1,11 @@
+* Preface
+If need be...
+#+begin_src ipython
+!pip install CFEDemands
+!pip install oauth2client
+!pip install dvc
+#+end_src
+
 * Introduction
 Here we give a set of generic instructions for analyzing demand for
 food and nutrition.  Inputs include a datasets of consumption
@@ -28,7 +36,7 @@ purchased as well as consumption items produced.  Here we focus on
 consumption purchases, since one of our immediate aims is to infer
 prices paid.
 
-** Step 1: Acquire DataFrames
+* Step 1: Acquire DataFrames
 
 Here are addresses of google sheets for different dataframes for the
 case of Niger:
@@ -105,9 +113,18 @@ fct = get_clean_sheet(InputFiles['FCT'][0],
                     json_creds='../students-9093fa174318.json',
                     sheet=InputFiles['FCT'][1])
 
+#### This bit peculiar to Niger FCT #####
+fct = fct.loc[fct.Code.str.len()==6]
+fct = fct.set_index('Code')
+fct.columns = [v.replace('\n',' ') for v in fct.columns]
+########################################
+
+fct.index.name = 'i'
+
+fct = fct.apply(lambda x: pd.to_numeric(x,errors='coerce'))
 #+end_src
 
-** Step 2: Estimate Demand System
+* Step 2: Estimate Demand System
 
 Here, use data on log /expenditures/ and household characteristics to
 create a CFEDemand =result=.
@@ -119,11 +136,11 @@ result = cfe.Result(y=np.log(x),z=z)
 # Estimates most things (not counting std errors for betas).
 xhat = result.get_predicted_expenditures() 
 
-result.get_beta(as_df=True) # Check sanity...
+result.get_beta(as_df=True).sort_values(ascending=False) # Check sanity...
 #+end_src
 
 
-** Step 3: Infer prices
+* Step 3: Infer prices
 
 Next, we divide predicted expenditures by actual quantities to get
 prices, then choose prices corresponding to some units (e.g.,
@@ -131,28 +148,71 @@ kilograms) we can map into the  FCT.
 
 #+begin_src ipython :tangle /tmp/foo.py
 
-# xhat is an xarray; change q
-q = q.to_xarray().to_array('i')
-phat = (xhat/q).to_dataframe('p').squeeze().unstack('i')
+# xhat is an xarray; change to df
+xhatdf = xhat.to_dataset('i').to_dataframe()
+xhatdf.columns.name ='i'
+
+phat = xhatdf/q
 
 # Keep kgs; g
 phat = phat.xs('kg',level='u').groupby(['t','m']).median().dropna(how='all')
 #+end_src
 
 
-** Step 4: Get predicted quantities
-Now divide predicted expenditures by predicted prices to get predicted
-quantities, and put back into a dataframe.
+* Step 4: Predicting Positive Consumption                        
+An issue with our assessment of fit is that we /predicted/ that every
+household would consume positive quantitites of every good, and in
+making our assessment we ignored the (many) cases in which in fact the
+household had zero expenditures on that good.  
+
+Here we're going to go back and use similar framework to try and
+estimate the probability with which we'll observe zero expenditures
+as a function of \lambda, prices, and household characteristics.
+
 #+begin_src ipython :tangle /tmp/foo.py
-qhat = xhat/phat.to_xarray().to_array('i')
+import matplotlib.pyplot as plt
+%matplotlib inline
+import matplotlib.cm as cm
 
-qhat = qhat.to_dataframe('q').unstack('i')
+zeros_r = cfe.Result(y=(0.+(result.y>0)),z=result.z)
+weights = zeros_r.get_predicted_log_expenditures()
 
-qhat.columns = qhat.columns.droplevel(0)
+# Truncate to make weights live in [0,1]
+weights = weights.where((weights<1) + np.isnan(weights),1).where((weights>0) + np.isnan(weights),0)
+
+xbar = np.exp(result.y).sum(['m','i']).to_dataframe('xbar').replace(0,np.nan).squeeze()
+
+# Calculate *expected* predicted expenditures, to make unconditional on being positive
+xhat = (weights*result.get_predicted_expenditures())
+xsum = xhat.sum(['m','i']).to_dataframe('xhat').replace(0,np.nan).squeeze()
+
+# Make dataframe of actual & predicted
+df = pd.DataFrame({'Actual':np.log(xbar),'Predicted':np.log(xsum)})
+
+df.plot.scatter(x='Predicted',y='Actual')
+
+# Add 45 degree line
+v = plt.axis()
+vmin = np.max([v[0],v[2]])
+vmax = np.max([v[1],v[3]])
+plt.plot([vmin,vmax],[vmin,vmax])
 #+end_src
 
 
-** Step 5: Map predicted quantities into nutrients
+* Step 5: Get predicted quantities
+Now divide predicted expenditures by predicted prices to get predicted
+quantities, and put back into a dataframe.
+#+begin_src ipython :tangle /tmp/foo.py
+xhatdf = xhat.to_dataset('i').to_dataframe()
+xhatdf.columns.name ='i'
+
+qhat = xhatdf.div(phat,axis=1)
+
+qhat
+#+end_src
+
+
+* Step 6: Map predicted quantities into nutrients
 
 May need some work to clean up the FCT, and create food names/indices
 corresponding to the =i= index in =qhat=.
@@ -234,11 +294,15 @@ These particular clean-ups are peculiar to the West African FCT.
 # Dictionary mapping index i to fct codes
 i_to_fct = pd.read_csv('niger_fct_codes.csv').dropna().set_index('Niger Labels').squeeze().to_dict()
 
-fct = fct.loc[fct.Code.str.len()==6]
-fct = fct.set_index('Code')
-fct.index.name = 'i'
+# Create version of qhat with fct ids for labels
+myq = qhat.rename(columns=i_to_fct)
+use_columns = myq.columns.intersection(i_to_fct.values())
+myq = myq[use_columns]
 
-myq=qhat.rename(columns=i_to_fct)[list(i_to_fct.values())]
+# Drop goods with no obs, households with no goods
+myq = myq.dropna(how='all',axis=1).dropna(how='all')
+
+# Create version of fct with just foods in myq
 myfct=fct.loc[myq.columns].iloc[:,8:] # Drop columns which aren't nutrients
 #+end_src
 
@@ -247,6 +311,6 @@ Before this will work, need columns of qhat to match columns of fct.
 #+begin_src ipython
 
 nutrients = myq@myfct
-
+nutrients.mean()    # NB: Nutrients are for past /week/ for entire household.
 #+end_src
-** Step 6: Compare nutrients to Recommended Daily Intakes (RDI)
+
