@@ -6,7 +6,10 @@ Constant Frisch Elasticity (CFE) demand systems.
 There are two prerequisites; the first is the =CFEDemands= python
 module, which can be installed with a simple:
 #+begin_src ipython :tangle no
-!pip install CFEDemands --pre
+!pip install CFEDemands --upgrade
+!pip install xarray
+!pip install dvc
+!pip install oauth2client
 #+end_src
 
 The second prerequisite is a dataset including detailed information on
@@ -60,43 +63,38 @@ We begin by defining a dictionary that contains the spreadsheet key.
 One is provided for the Indian ICRISAT example that I wish to work
 through. 
 #+begin_src ipython :results silent  :tangle estimation_example.py
-Sheets = {'ICRISAT':'13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo',
-         # 'Your dataset':'Your google spreadsheet key',
-         }
+ICRISAT_Data = '13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo' 
 #+end_src
 
 With the spreadsheet defined , grab it and define a couple of
 dataframes. Note that the spreadsheet must be public for this approach
-to work!
+to work; if you want to keep this private consider using private
+keys.  
 
 #+begin_src ipython :results silent  :tangle estimation_example.py
 import pandas as pd
 import numpy as np
+import sys
+from eep153_tools import read_sheets
 
-# The function below adapted from Gianmario Spacagna's suggestion at
-# https://stackoverflow.com/questions/19611729/getting-google-spreadsheet-csv-into-a-pandas-dataframe
-def dataframe_from_gspreadsheet(sheet_name, key):
-    """Transform public google spreadsheet into pandas.DataFrame."""
-    
-    url = 'https://docs.google.com/spreadsheets/d/{key}/gviz/tq?tqx=out:csv&sheet={sheet_name}&headers=1'.format(
-        key=key, sheet_name=sheet_name.replace(' ', '%20'))
+#### Need private keys from json file (we're authenticating using "service accounts")
+#!gpg --batch --passphrase "SECRET PASSPHRASE" -d ../students-9093fa174318.json.gpg > ../students-9093fa174318.json
+####
 
-    df = pd.read_csv(url)
-
-    return df.drop([col for col in df.columns if col.startswith('Unnamed')], axis=1)
-
+# Add credentials if sheet not meant to be public
+x = read_sheets(ICRISAT_Data,sheet='Expenditures',json_creds='../students-9093fa174318.json')
+                 
 # Change 'ICRISAT' to key of your own sheet in Sheets, above
-x = dataframe_from_gspreadsheet("Expenditures", Sheets['ICRISAT'])
-
-# Change 'ICRISAT' to key of your own sheet in Sheets, above
-z = dataframe_from_gspreadsheet("Household Characteristics", Sheets['ICRISAT'])
+z = read_sheets(ICRISAT_Data,sheet="HH Characteristics",json_creds='../students-9093fa174318.json')
 
 # Assume a single market: (Comment this out to make each village its own market)
 z['m'] = 1
 x['m'] = 1
 
+x = x.replace(0,np.nan) # Replace zeros with missing
+
 # Take logs of expenditures; call this y
-y = np.log(x.replace(0,np.nan).set_index(['j','t','m']))
+y = np.log(x.set_index(['j','t','m']))
 
 z.set_index(['j','t','m'],inplace=True)
 #+end_src
@@ -149,7 +147,7 @@ After running this we can examine the estimated coefficients $\delta$:
 result.delta.to_dataframe().unstack('k')
 #+end_src
 
-Also the good-time constants $a_{it}$:
+Also the good-time constants $a_{it}$ (this captures the effects of prices)
 #+begin_src ipython
 result.a.to_dataframe().unstack('i')
 #+end_src
@@ -169,7 +167,7 @@ demand changes as the MUE falls.
 
 Estimates can also be computed as a one-liner:
 #+begin_src ipython  
-result.get_beta().to_dataframe()
+result.get_beta(as_df=True)
 #+end_src
 
 That's all there is to estimation!  Note that we didn't estimate
