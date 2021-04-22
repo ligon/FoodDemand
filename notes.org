@@ -85,10 +85,20 @@ import cfe
 import pandas as pd
 import numpy as np
 
-Sheets = {"ICRISAT_wprices":"13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo"}
-Sheets = {"Uganda":{"Expenditures":"1mZcHvSD55wGCicdqxbEnioE3AOXM_pVb6zVwHhtBzSk",
+Sheets = {"Indian ICRISAT":"13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo",
+          "Uganda":{"Expenditures":"1mZcHvSD55wGCicdqxbEnioE3AOXM_pVb6zVwHhtBzSk",
                     "HH Characteristics":"1mZcHvSD55wGCicdqxbEnioE3AOXM_pVb6zVwHhtBzSk",
-                    "Consumption":"1RT5AfbZbWx-CmNaOHLp7aD9qEjgjiBv8lZmPexuKEWg"}}
+                    "Consumption":"1RT5AfbZbWx-CmNaOHLp7aD9qEjgjiBv8lZmPexuKEWg"},
+          "Ethiopia":"1tVyKqfI_t7KWmx69Gmj15RyU3_amqf-M0P8hgA9pNi0",
+          "Malawi":{"Expenditures":"1-rP6IC2wm91nH94xApeLCXS7dslqlsTns9si57Hs1c0",
+                    "HH Characteristics":"1-rP6IC2wm91nH94xApeLCXS7dslqlsTns9si57Hs1c0",
+                    "Consumption":"1DgVpSDRG7x7C7WMMwE1nW83brasYkferIdtt81fBanA"},
+          "Niger":"1bgtTkbI2WWpPBKaTFO2Nra632UC6hMkB_QFMq8we00o",
+          "Nigeria":{"Expenditures":"17L5cDhXRLNAckP3JvBLTLSYIguFqP2ebMvQLH96c0n4",
+                     "HH Characteristics":"17L5cDhXRLNAckP3JvBLTLSYIguFqP2ebMvQLH96c0n4",
+                     "Consumption":"1kG_fVBmj9EEF9LOwxN30HBxkQENOoWeQjVPYzMJe3b4"},
+          "Tanzania":"1QqfWnizPaIyMEspa3NcOS-oDP21EV-4RE-CIIY-7Tuc"}
+
 
 def dataframe_from_gspreadsheet(sheet_name, key):
     """Transform public google spreadsheet into pandas.DataFrame."""
@@ -135,9 +145,9 @@ def prices(Q,X,tol=1e-6):
     P = pd.concat(B).replace(0,np.nan).dropna()
     P.index.names = ['t','m','i','u']
 
-    P = P.unstack(['i','u'])
+    #P = P.unstack(['i','u'])
     
-    return P.T
+    return P
 
 for k,v in Sheets.items():
     print(k)
@@ -155,9 +165,9 @@ for k,v in Sheets.items():
         x['m'] = 1
         c['m'] = 1
 
-    z = z.reset_index().set_index(['j','t','m'])
-    c = c.reset_index().set_index(['j','t','m'])
-    x = x.reset_index().set_index(['j','t','m'])
+    z = z.set_index(['j','t','m'])
+    c = c.set_index(['j','t','m'])
+    x = x.set_index(['j','t','m'])
 
     x = x.loc[~x.index.duplicated(), :]
     c = c.loc[~c.index.duplicated(), :]
@@ -165,5 +175,23 @@ for k,v in Sheets.items():
 
     p = prices(c,x)  # Prices for all transactions
 
+    r = cfe.Result(y=np.log(x.replace(0,np.nan)),
+                   z=z,
+                   prices=p.T, verbose=True)
+
+
+    r.to_dataset('%s.ds' % k)
+
+    # Fill out the result
+    r.get_reduced_form()
+    r.get_beta()
+    r.get_alpha()
+    r.get_predicted_expenditures()
+
+    # Eliminate some expensive arrays
+
+    r.drop_vars(['y','ce','cehat']).to_dataset('/tmp/%s_small.ds' % k)
+
+    r.to_dataset('%s.ds' % k)
 
 #+end_src

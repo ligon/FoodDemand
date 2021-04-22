@@ -16,23 +16,24 @@
    beverages" is 72.  Other sorts of expenditures related to
    consumption are in accounts 71--79, as follows:
 
-| Consumption Category                                                                                                                           | Acct |
-|------------------------------------------------------------------------------------------------------------------------------------------------+------|
-| Food (codes) including milk, sweets and spices                                                                                                 |   71 |
-| Narcotics, tea, coffee, tobacco, pan, alcoholic beverages                                                                                      |   72 |
-| Clothing, sewing of cloth, other tailoring expenses, thread, needles, chappals and other footwear (purchase and repair), etc., (no item codes) |   73 |
-| Medicines, cosmetics, soap, barber service (no item codes)                                                                                     |   74 |
-| Travel and entertainment, (no item codes)                                                                                                      |   75 |
-| Electricity, water charges and cooking fuels (like kerosene, match box) for household use, (no item codes)                                     |   76 |
-| Labor expenses for domestic work, (no item codes)                                                                                              |   77 |
-| Ceremonial expenses (including Kapur, Gulal, Agarbathi, etc.)                                                                                  |   78 |
-| Edible oils and fats (other than ghee) (no item code)                                                                                          |   79 |
-| Others, including complete meals in hotel, school and educational materials, stamps, stationery, grinding and milling charges etc.             |   70 |
+#+attr_latex: :align |r|p{0.8\textwidth}|
+| Acct | Consumption Category                                                                                                                           |
+|------+------------------------------------------------------------------------------------------------------------------------------------------------|
+|   71 | Food (codes) including milk, sweets and spices                                                                                                 |
+|   72 | Narcotics, tea, coffee, tobacco, pan, alcoholic beverages                                                                                      |
+|   73 | Clothing, sewing of cloth, other tailoring expenses, thread, needles, chappals and other footwear (purchase and repair), etc., (no item codes) |
+|   74 | Medicines, cosmetics, soap, barber service (no item codes)                                                                                     |
+|   75 | Travel and entertainment, (no item codes)                                                                                                      |
+|   76 | Electricity, water charges and cooking fuels (like kerosene, match box) for household use, (no item codes)                                     |
+|   77 | Labor expenses for domestic work, (no item codes)                                                                                              |
+|   78 | Ceremonial expenses (including Kapur, Gulal, Agarbathi, etc.)                                                                                  |
+|   79 | Edible oils and fats (other than ghee) (no item code)                                                                                          |
+|   70 | Others, including complete meals in hotel, school and educational materials, stamps, stationery, grinding and milling charges etc.             |
 
 Different kinds of food and narcotics are coded according to
 [[food_codes]], along with account codes for those accounts that have no
 item codes.
-   
+   #+attr_latex: :environment longtable :align |p{.4\textwidth}|l|p{0.4\textwidth}|
    #+name: food_codes
    | Food                                                          | Code | Preferred label                                               |
    |---------------------------------------------------------------+------+---------------------------------------------------------------|
@@ -216,7 +217,7 @@ L.to_pickle('l.df')
 #+begin_src python :var codes=food_codes :tangle expenditures.py
 import numpy as np
 import pandas as pd
-from cfe.df_utils import orgtbl_to_df
+from cfe.df_utils import orgtbl_to_df, df_to_orgtbl
 
 L = pd.read_pickle('l.df')
 
@@ -287,9 +288,146 @@ Q.rename(index=Units,level='unit',inplace=True)
 Q = Q.fillna(0)
 
 Q.to_pickle('q.df')
+
+# Print counts of observations of different items
+print(df_to_orgtbl((Q>0).sum().sort_values(ascending=False),float_fmt="%d"))
 #+end_src
 
 #+results:
+| i                                                             |    0 |
+|---------------------------------------------------------------+------|
+| Utilities                                                     | 1916 |
+| Jowar/Sorghum                                                 | 1192 |
+| Rice                                                          | 1184 |
+| Bengalgram dhal                                               | 1029 |
+| Edible oils                                                   | 1020 |
+| Redgram dhal                                                  | 1014 |
+| Milk                                                          | 1014 |
+| Wheat                                                         |  991 |
+| Chillies                                                      |  988 |
+| Gur (jaggery)                                                 |  946 |
+| Cosmetics tooth paste etc.                                    |  894 |
+| Onion                                                         |  891 |
+| Sugar                                                         |  822 |
+| Other spices                                                  |  811 |
+| Goat                                                          |  801 |
+| Brinjal                                                       |  794 |
+| Tea                                                           |  779 |
+| Other vegetables                                              |  774 |
+| Coconut                                                       |  678 |
+| Tobacco, beedi                                                |  542 |
+| Tomato                                                        |  471 |
+| Groundnuts                                                    |  438 |
+| Other dhal                                                    |  429 |
+| Processed foods (e.g. biscuits Khara, syrup, baby food, etc.) |  390 |
+| Other Fruits                                                  |  363 |
+| Other consumption                                             |  361 |
+| Eggs                                                          |  330 |
+| Bajra/Pearl millet                                            |  286 |
+| Greengram dhal                                                |  283 |
+| Ghee                                                          |  263 |
+| Mango                                                         |  262 |
+| Soap, washing powder                                          |  260 |
+| Poultry birds                                                 |  248 |
+| Fish                                                          |  244 |
+| Greengram (Mung)                                              |  235 |
+| Redgram (Tur)/Pigeonpea                                       |  220 |
+| Other pulses                                                  |  196 |
+| Blackgram (Urad)                                              |  190 |
+| Bengalgram (Chenna)/Chickpea                                  |  189 |
+| Cabbage                                                       |  181 |
+| Castor                                                        |  181 |
+| Maize                                                         |  178 |
+| Ceremonial expenses                                           |  169 |
+| Pan, betel, etc.                                              |  163 |
+| Other sugar products                                          |  108 |
+| Beef                                                          |   95 |
+| Blackgram dhal                                                |   89 |
+| Other Narcotics                                               |   66 |
+| Medicine, cosmetics, etc.                                     |   47 |
+| Sheep                                                         |   45 |
+| Other cereals                                                 |   43 |
+| Other minor millets                                           |   37 |
+| Lemon                                                         |   35 |
+| Sesamum                                                       |   34 |
+| Clothing                                                      |   30 |
+| Cowpea                                                        |   25 |
+| Leafy vegetables                                              |   24 |
+| Orange                                                        |   23 |
+| Safflower                                                     |   23 |
+| Other Food                                                    |   21 |
+| Grapes                                                        |   18 |
+| Educational material expenses (pen, books, paper, etc.)       |   16 |
+| Sugarcane                                                     |   16 |
+| Other milk products like curd, etc.                           |   15 |
+| Cotton                                                        |   15 |
+| Potato                                                        |   14 |
+| Coffee                                                        |   11 |
+| Sunflower                                                     |   10 |
+| ZK                                                            |    9 |
+| Mustard                                                       |    9 |
+| Other livestock                                               |    9 |
+| Banana                                                        |    7 |
+| Buffalo                                                       |    7 |
+| Grinding/milling charges                                      |    6 |
+| KQ                                                            |    6 |
+| YK                                                            |    6 |
+| BK                                                            |    5 |
+| Linseed                                                       |    5 |
+| ZF                                                            |    4 |
+| Other personal                                                |    4 |
+| Meals                                                         |    3 |
+| Barber service (and material relating to it)                  |    3 |
+| Travel & Entertainment                                        |    3 |
+| QJ                                                            |    3 |
+| EY                                                            |    3 |
+| KJ                                                            |    3 |
+| HB                                                            |    3 |
+| Other Fiber crops                                             |    2 |
+| ZJ                                                            |    2 |
+| Other animal products                                         |    2 |
+| Ragi/Finger millet                                            |    2 |
+| LN                                                            |    2 |
+| QC                                                            |    2 |
+| AN                                                            |    2 |
+| AB                                                            |    2 |
+| CV                                                            |    2 |
+| BN                                                            |    1 |
+| Medicine Doctor's fees                                        |    1 |
+| LY                                                            |    1 |
+| AV                                                            |    1 |
+| VM                                                            |    1 |
+| ZB                                                            |    1 |
+| ZA                                                            |    1 |
+| YZ                                                            |    1 |
+| KL                                                            |    1 |
+| YB                                                            |    1 |
+| Wool, goat hair, etc.                                         |    1 |
+| 5B                                                            |    1 |
+| 4K                                                            |    1 |
+| Soybean                                                       |    1 |
+| UB                                                            |    1 |
+| IF                                                            |    1 |
+| Other                                                         |    1 |
+| Other oilseeds                                                |    1 |
+| NR                                                            |    1 |
+| GJ                                                            |    1 |
+| GD                                                            |    1 |
+| GB                                                            |    1 |
+| PP                                                            |    1 |
+| Fennel                                                        |    1 |
+| FF                                                            |    1 |
+| Pig                                                           |    1 |
+| QF                                                            |    1 |
+| ES                                                            |    1 |
+| HP                                                            |    1 |
+| RF                                                            |    1 |
+| SG                                                            |    1 |
+| SN                                                            |    1 |
+| SR                                                            |    1 |
+| 2G                                                            |    1 |
+
+
 
 * Food Conversion (to nutrients)
   Alessandro Tarozzi provides a mapping from foods reported in the
@@ -298,7 +436,9 @@ Q.to_pickle('q.df')
   consumed in the ICRISAT data which correspond to foods in the NSS
   data is mostly straight-forward.
 ** ICRISAT Foods to NSS 68 Food Codes
+
 #+name: icrisat2nss
+#+attr_latex: :environment longtable :align |p{0.4\textwidth}|r|p{0.4\textwidth}|
 | ICRISAT Food Label                    | Code | Food Label                             |
 |---------------------------------------+------+----------------------------------------|
 | Edible oils                           |  185 | Edible oils                            |
@@ -384,6 +524,7 @@ Q.to_pickle('q.df')
 
 ** NSS 68 Food Codes
 #+name: nss68codes
+#+attr_latex: :environment longtable :align |p{0.8\textwidth}|r|
 | NSS68 Items                                        | Code |
 |----------------------------------------------------+------|
 | apple                                              |  236 |
@@ -585,182 +726,179 @@ fct.to_pickle('fct.df')
 #+end_src
 
 #+results:
-|    | Code | NSS Item                                          | ICRISAT Food Label                  | Food Label                          |
-|----+------+---------------------------------------------------+-------------------------------------+-------------------------------------|
-|  0 |  102 | rice  other sources                           | Paddy (Local variety)               | Rice                                |
-|  1 |  102 | rice  other sources                           | Paddy (HYV)                         | Rice                                |
-|  2 |  102 | rice  other sources                           | Rice (local variety)                | Rice                                |
-|  3 |  102 | rice  other sources                           | Rice (HYV variety)                  | Rice                                |
-|  4 |  108 | wheat/atta  other sources                     | Wheat (Local variety)               | Wheat                               |
-|  5 |  108 | wheat/atta  other sources                     | Wheat (HYV)                         | Wheat                               |
-|  6 |  115 | jowar & products                                  | Jowar/Sorghum (Local variety)       | Jowar/Sorghum                       |
-|  7 |  115 | jowar & products                                  | Jowar/Sorghum (HYV)                 | Jowar/Sorghum                       |
-|  8 |  116 | bajra & products                                  | Bajra/Pearl millet (Local variety)  | Bajra/Pearl millet                  |
-|  9 |  116 | bajra & products                                  | Bajra/Pearl millet (HYV)            | Bajra/Pearl millet                  |
-| 10 |  117 | maize & products                                  | Maize (Local variety)               | Maize                               |
-| 11 |  117 | maize & products                                  | Maize (HYV)                         | Maize                               |
-| 12 |  120 | small millets & products                          | Other minor millets                 | Other minor millets                 |
-| 13 |  121 | ragi & products                                   | Ragi/Finger millet                  | Ragi/Finger millet                  |
-| 14 |  122 | other cereals                                     | Other cereals                       | Other cereals                       |
-| 15 |  142 | gram (whole)                                      | Redgram (Tur)/Pigeonpea             | Redgram (Tur)/Pigeonpea             |
-| 16 |  142 | gram (whole)                                      | Blackgram (Urad)                    | Blackgram (Urad)                    |
-| 17 |  142 | gram (whole)                                      | Bengalgram (Chenna)/Chickpea        | Bengalgram (Chenna)/Chickpea        |
-| 18 |  142 | gram (whole)                                      | Redgram dhal                        | Redgram dhal                        |
-| 19 |  142 | gram (whole)                                      | Blackgram dhal                      | Blackgram dhal                      |
-| 20 |  142 | gram (whole)                                      | Bengalgram dhal                     | Bengalgram dhal                     |
-| 21 |  143 | moong                                             | Greengram (Mung)                    | Greengram (Mung)                    |
-| 22 |  143 | moong                                             | Greengram dhal                      | Greengram dhal                      |
-| 23 |  146 | peas                                              | Cowpea                              | Cowpea                              |
-| 24 |  148 | other pulses                                      | Soybean                             | Soybean                             |
-| 25 |  148 | other pulses                                      | Other pulses                        | Other pulses                        |
-| 26 |  148 | other pulses                                      | Other dhal                          | Other dhal                          |
-| 27 |  160 | milk: liquid                                      | Milk                                | Milk                                |
-| 28 |  163 | curd                                              | Other milk products like curd, etc. | Other milk products like curd, etc. |
-| 29 |  164 | ghee                                              | Ghee                                | Ghee                                |
-| 30 |  172 | sugar  other sources                          | Sugarcane                           | Sugarcane                           |
-| 31 |  172 | sugar  other sources                          | Sugar                               | Sugar                               |
-| 32 |  172 | sugar  other sources                          | Other sugar products                | Other sugar products                |
-| 33 |  173 | gur                                               | Gur (jaggery)                       | Gur (jaggery)                       |
-| 34 |  181 | mustard oil                                       | Mustard                             | Mustard                             |
-| 35 |  182 | groundnut oil                                     | Groundnut oil                       | Edible oils                         |
-| 36 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Sunflower                           | Sunflower                           |
-| 37 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower                           | Safflower                           |
-| 38 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower oil                       | Edible oils                         |
-| 39 |  185 | edible oil: others                                | Edible oils                         | Edible oils                         |
-| 40 |  185 | edible oil: others                                | Linseed                             | Linseed                             |
-| 41 |  185 | edible oil: others                                | Linseed Oil                         | Edible oils                         |
-| 42 |  190 | eggs                                              | Eggs                                | Eggs                                |
-| 43 |  191 | fish, prawn                                       | Fish                                | Fish                                |
-| 44 |  192 | goat meat/mutton                                  | Goat                                | Goat                                |
-| 45 |  192 | goat meat/mutton                                  | Sheep                               | Sheep                               |
-| 46 |  193 | beef/ buffalo meat                                | Bullocks                            | Beef                                |
-| 47 |  193 | beef/ buffalo meat                                | Cow                                 | Beef                                |
-| 48 |  193 | beef/ buffalo meat                                | Young Cattle (under 3 years)        | Beef                                |
-| 49 |  193 | beef/ buffalo meat                                | He buffalo                          | Buffalo                             |
-| 50 |  193 | beef/ buffalo meat                                | She buffalo                         | Buffalo                             |
-| 51 |  194 | pork                                              | Pig                                 | Pig                                 |
-| 52 |  195 | chicken                                           | Poultry birds                       | Poultry birds                       |
-| 53 |  200 | potato (includes sweet potato and green plantain) | Potato                              | Potato                              |
-| 54 |  201 | onion                                             | Onion                               | Onion                               |
-| 55 |  202 | tomato                                            | Tomato                              | Tomato                              |
-| 56 |  203 | brinjal                                           | Brinjal                             | Brinjal                             |
-| 57 |  206 | palak/other leafy vegetables                      | Leafy vegetables                    | Leafy vegetables                    |
-| 58 |  207 | chillis: green                                    | Chillies                            | Chillies                            |
-| 59 |  212 | cabbage                                           | Cabbage                             | Cabbage                             |
-| 60 |  216 | lemon                                             | Lemon                               | Lemon                               |
-| 61 |  217 | other vegetables (rural)                          | Other vegetables                    | Other vegetables                    |
-| 62 |  217 | other vegetables (urban)                          | Other vegetables                    | Other vegetables                    |
-| 63 |  220 | banana                                            | Banana                              | Banana                              |
-| 64 |  224 | coconut                                           | Coconut                             | Coconut                             |
-| 65 |  228 | orange, mausami                                   | Orange                              | Orange                              |
-| 66 |  231 | mango                                             | Mango                               | Mango                               |
-| 67 |  237 | grapes                                            | Grapes                              | Grapes                              |
-| 68 |  238 | other fresh fruits (rural)                        | Other Fruits                        | Other Fruits                        |
-| 69 |  238 | other fresh fruits (urban)                        | Other Fruits                        | Other Fruits                        |
-| 70 |  241 | groundnut                                         | Groundnuts                          | Groundnuts                          |
-| 71 |  260 | oilseeds                                          | Sesamum                             | Sesamum                             |
-| 72 |  260 | oilseeds                                          | Other oilseeds                      | Other oilseeds                      |
-| 73 |  261 | other spices                                      | Fennel                              | Fennel                              |
-| 74 |  261 | other spices                                      | Other spices                        | Other spices                        |
-| 75 |  271 | tea : leaf                                        | Tea                                 | Tea                                 |
-| 76 |  272 | coffee : cups                                     | Coffee                              | Coffee                              |
-| 77 |  280 | cooked meals purchased                            | Meals                               | Meals                               |
-| 78 |  280 | cooked meals purchased                            | Complete meals in hotel             | Complete meals in hotel             |
-| 79 |  296 | other packaged processed food (rural)             | Various processed foods             | Various processed foods             |
-| 80 |  296 | other packaged processed food (urban)             | Various processed foods             | Various processed foods             |
-| 81 |  301 | pan: finished                                     | Pan, betel, etc.                    | Pan, betel, etc.                    |
+| Code | NSS Item                                          | ICRISAT Food Label                  | Food Label                          |
+|------+---------------------------------------------------+-------------------------------------+-------------------------------------|
+|  102 | rice  other sources                           | Paddy (Local variety)               | Rice                                |
+|  102 | rice  other sources                           | Paddy (HYV)                         | Rice                                |
+|  102 | rice  other sources                           | Rice (local variety)                | Rice                                |
+|  102 | rice  other sources                           | Rice (HYV variety)                  | Rice                                |
+|  108 | wheat/atta  other sources                     | Wheat (Local variety)               | Wheat                               |
+|  108 | wheat/atta  other sources                     | Wheat (HYV)                         | Wheat                               |
+|  115 | jowar & products                                  | Jowar/Sorghum (Local variety)       | Jowar/Sorghum                       |
+|  115 | jowar & products                                  | Jowar/Sorghum (HYV)                 | Jowar/Sorghum                       |
+|  116 | bajra & products                                  | Bajra/Pearl millet (Local variety)  | Bajra/Pearl millet                  |
+|  116 | bajra & products                                  | Bajra/Pearl millet (HYV)            | Bajra/Pearl millet                  |
+|  117 | maize & products                                  | Maize (Local variety)               | Maize                               |
+|  117 | maize & products                                  | Maize (HYV)                         | Maize                               |
+|  120 | small millets & products                          | Other minor millets                 | Other minor millets                 |
+|  121 | ragi & products                                   | Ragi/Finger millet                  | Ragi/Finger millet                  |
+|  122 | other cereals                                     | Other cereals                       | Other cereals                       |
+|  142 | gram (whole)                                      | Redgram (Tur)/Pigeonpea             | Redgram (Tur)/Pigeonpea             |
+|  142 | gram (whole)                                      | Blackgram (Urad)                    | Blackgram (Urad)                    |
+|  142 | gram (whole)                                      | Bengalgram (Chenna)/Chickpea        | Bengalgram (Chenna)/Chickpea        |
+|  142 | gram (whole)                                      | Redgram dhal                        | Redgram dhal                        |
+|  142 | gram (whole)                                      | Blackgram dhal                      | Blackgram dhal                      |
+|  142 | gram (whole)                                      | Bengalgram dhal                     | Bengalgram dhal                     |
+|  143 | moong                                             | Greengram (Mung)                    | Greengram (Mung)                    |
+|  143 | moong                                             | Greengram dhal                      | Greengram dhal                      |
+|  146 | peas                                              | Cowpea                              | Cowpea                              |
+|  148 | other pulses                                      | Soybean                             | Soybean                             |
+|  148 | other pulses                                      | Other pulses                        | Other pulses                        |
+|  148 | other pulses                                      | Other dhal                          | Other dhal                          |
+|  160 | milk: liquid                                      | Milk                                | Milk                                |
+|  163 | curd                                              | Other milk products like curd, etc. | Other milk products like curd, etc. |
+|  164 | ghee                                              | Ghee                                | Ghee                                |
+|  172 | sugar  other sources                          | Sugarcane                           | Sugarcane                           |
+|  172 | sugar  other sources                          | Sugar                               | Sugar                               |
+|  172 | sugar  other sources                          | Other sugar products                | Other sugar products                |
+|  173 | gur                                               | Gur (jaggery)                       | Gur (jaggery)                       |
+|  181 | mustard oil                                       | Mustard                             | Mustard                             |
+|  182 | groundnut oil                                     | Groundnut oil                       | Edible oils                         |
+|  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Sunflower                           | Sunflower                           |
+|  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower                           | Safflower                           |
+|  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower oil                       | Edible oils                         |
+|  185 | edible oil: others                                | Edible oils                         | Edible oils                         |
+|  185 | edible oil: others                                | Linseed                             | Linseed                             |
+|  185 | edible oil: others                                | Linseed Oil                         | Edible oils                         |
+|  190 | eggs                                              | Eggs                                | Eggs                                |
+|  191 | fish, prawn                                       | Fish                                | Fish                                |
+|  192 | goat meat/mutton                                  | Goat                                | Goat                                |
+|  192 | goat meat/mutton                                  | Sheep                               | Sheep                               |
+|  193 | beef/ buffalo meat                                | Bullocks                            | Beef                                |
+|  193 | beef/ buffalo meat                                | Cow                                 | Beef                                |
+|  193 | beef/ buffalo meat                                | Young Cattle (under 3 years)        | Beef                                |
+|  193 | beef/ buffalo meat                                | He buffalo                          | Buffalo                             |
+|  193 | beef/ buffalo meat                                | She buffalo                         | Buffalo                             |
+|  194 | pork                                              | Pig                                 | Pig                                 |
+|  195 | chicken                                           | Poultry birds                       | Poultry birds                       |
+|  200 | potato (includes sweet potato and green plantain) | Potato                              | Potato                              |
+|  201 | onion                                             | Onion                               | Onion                               |
+|  202 | tomato                                            | Tomato                              | Tomato                              |
+|  203 | brinjal                                           | Brinjal                             | Brinjal                             |
+|  206 | palak/other leafy vegetables                      | Leafy vegetables                    | Leafy vegetables                    |
+|  207 | chillis: green                                    | Chillies                            | Chillies                            |
+|  212 | cabbage                                           | Cabbage                             | Cabbage                             |
+|  216 | lemon                                             | Lemon                               | Lemon                               |
+|  217 | other vegetables (rural)                          | Other vegetables                    | Other vegetables                    |
+|  217 | other vegetables (urban)                          | Other vegetables                    | Other vegetables                    |
+|  220 | banana                                            | Banana                              | Banana                              |
+|  224 | coconut                                           | Coconut                             | Coconut                             |
+|  228 | orange, mausami                                   | Orange                              | Orange                              |
+|  231 | mango                                             | Mango                               | Mango                               |
+|  237 | grapes                                            | Grapes                              | Grapes                              |
+|  238 | other fresh fruits (rural)                        | Other Fruits                        | Other Fruits                        |
+|  238 | other fresh fruits (urban)                        | Other Fruits                        | Other Fruits                        |
+|  241 | groundnut                                         | Groundnuts                          | Groundnuts                          |
+|  260 | oilseeds                                          | Sesamum                             | Sesamum                             |
+|  260 | oilseeds                                          | Other oilseeds                      | Other oilseeds                      |
+|  261 | other spices                                      | Fennel                              | Fennel                              |
+|  261 | other spices                                      | Other spices                        | Other spices                        |
+|  271 | tea : leaf                                        | Tea                                 | Tea                                 |
+|  272 | coffee : cups                                     | Coffee                              | Coffee                              |
+|  280 | cooked meals purchased                            | Meals                               | Meals                               |
+|  280 | cooked meals purchased                            | Complete meals in hotel             | Complete meals in hotel             |
+|  296 | other packaged processed food (rural)             | Various processed foods             | Various processed foods             |
+|  296 | other packaged processed food (urban)             | Various processed foods             | Various processed foods             |
+|  301 | pan: finished                                     | Pan, betel, etc.                    | Pan, betel, etc.                    |
 
 
 
 #+name: tab:nss_and_icrisat_foods
-|    | Code | NSS Item                                          | ICRISAT Food Label                  | Food Label                          |
-|----+------+---------------------------------------------------+-------------------------------------+-------------------------------------|
-|  0 |  102 | rice  other sources                           | Paddy (Local variety)               | Rice                                |
-|  1 |  102 | rice  other sources                           | Paddy (HYV)                         | Rice                                |
-|  2 |  102 | rice  other sources                           | Rice (local variety)                | Rice                                |
-|  3 |  102 | rice  other sources                           | Rice (HYV variety)                  | Rice                                |
-|  4 |  108 | wheat/atta  other sources                     | Wheat (Local variety)               | Wheat                               |
-|  5 |  108 | wheat/atta  other sources                     | Wheat (HYV)                         | Wheat                               |
-|  6 |  115 | jowar & products                                  | Jowar/Sorghum (Local variety)       | Jowar/Sorghum                       |
-|  7 |  115 | jowar & products                                  | Jowar/Sorghum (HYV)                 | Jowar/Sorghum                       |
-|  8 |  116 | bajra & products                                  | Bajra/Pearl millet (Local variety)  | Bajra/Pearl millet                  |
-|  9 |  116 | bajra & products                                  | Bajra/Pearl millet (HYV)            | Bajra/Pearl millet                  |
-| 10 |  117 | maize & products                                  | Maize (Local variety)               | Maize                               |
-| 11 |  117 | maize & products                                  | Maize (HYV)                         | Maize                               |
-| 12 |  120 | small millets & products                          | Other minor millets                 | Other minor millets                 |
-| 13 |  121 | ragi & products                                   | Ragi/Finger millet                  | Ragi/Finger millet                  |
-| 14 |  122 | other cereals                                     | Other cereals                       | Other cereals                       |
-| 15 |  142 | gram (whole)                                      | Redgram (Tur)/Pigeonpea             | Redgram (Tur)/Pigeonpea             |
-| 16 |  142 | gram (whole)                                      | Blackgram (Urad)                    | Blackgram (Urad)                    |
-| 17 |  142 | gram (whole)                                      | Bengalgram (Chenna)/Chickpea        | Bengalgram (Chenna)/Chickpea        |
-| 18 |  142 | gram (whole)                                      | Redgram dhal                        | Redgram dhal                        |
-| 19 |  142 | gram (whole)                                      | Blackgram dhal                      | Blackgram dhal                      |
-| 20 |  142 | gram (whole)                                      | Bengalgram dhal                     | Bengalgram dhal                     |
-| 21 |  143 | moong                                             | Greengram (Mung)                    | Greengram (Mung)                    |
-| 22 |  143 | moong                                             | Greengram dhal                      | Greengram dhal                      |
-| 23 |  146 | peas                                              | Cowpea                              | Cowpea                              |
-| 24 |  148 | other pulses                                      | Soybean                             | Soybean                             |
-| 25 |  148 | other pulses                                      | Other pulses                        | Other pulses                        |
-| 26 |  148 | other pulses                                      | Other dhal                          | Other dhal                          |
-| 27 |  160 | milk: liquid                                      | Milk                                | Milk                                |
-| 28 |  163 | curd                                              | Other milk products like curd, etc. | Other milk products like curd, etc. |
-| 29 |  164 | ghee                                              | Ghee                                | Ghee                                |
-| 30 |  172 | sugar  other sources                          | Sugarcane                           | Sugarcane                           |
-| 31 |  172 | sugar  other sources                          | Sugar                               | Sugar                               |
-| 32 |  172 | sugar  other sources                          | Other sugar products                | Other sugar products                |
-| 33 |  173 | gur                                               | Gur (jaggery)                       | Gur (jaggery)                       |
-| 34 |  181 | mustard oil                                       | Mustard                             | Mustard                             |
-| 35 |  182 | groundnut oil                                     | Groundnut oil                       | Edible oils                         |
-| 36 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Sunflower                           | Sunflower                           |
-| 37 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower                           | Safflower                           |
-| 38 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower oil                       | Edible oils                         |
-| 39 |  185 | edible oil: others                                | Edible oils                         | Edible oils                         |
-| 40 |  185 | edible oil: others                                | Linseed                             | Linseed                             |
-| 41 |  185 | edible oil: others                                | Linseed Oil                         | Edible oils                         |
-| 42 |  190 | eggs                                              | Eggs                                | Eggs                                |
-| 43 |  191 | fish, prawn                                       | Fish                                | Fish                                |
-| 44 |  192 | goat meat/mutton                                  | Goat                                | Goat                                |
-| 45 |  192 | goat meat/mutton                                  | Sheep                               | Sheep                               |
-| 46 |  193 | beef/ buffalo meat                                | Bullocks                            | Beef                                |
-| 47 |  193 | beef/ buffalo meat                                | Cow                                 | Beef                                |
-| 48 |  193 | beef/ buffalo meat                                | Young Cattle (under 3 years)        | Beef                                |
-| 49 |  193 | beef/ buffalo meat                                | He buffalo                          | Buffalo                             |
-| 50 |  193 | beef/ buffalo meat                                | She buffalo                         | Buffalo                             |
-| 51 |  194 | pork                                              | Pig                                 | Pig                                 |
-| 52 |  195 | chicken                                           | Poultry birds                       | Poultry birds                       |
-| 53 |  200 | potato (includes sweet potato and green plantain) | Potato                              | Potato                              |
-| 54 |  201 | onion                                             | Onion                               | Onion                               |
-| 55 |  202 | tomato                                            | Tomato                              | Tomato                              |
-| 56 |  203 | brinjal                                           | Brinjal                             | Brinjal                             |
-| 57 |  206 | palak/other leafy vegetables                      | Leafy vegetables                    | Leafy vegetables                    |
-| 58 |  207 | chillis: green                                    | Chillies                            | Chillies                            |
-| 59 |  212 | cabbage                                           | Cabbage                             | Cabbage                             |
-| 60 |  216 | lemon                                             | Lemon                               | Lemon                               |
-| 61 |  217 | other vegetables (rural)                          | Other vegetables                    | Other vegetables                    |
-| 62 |  217 | other vegetables (urban)                          | Other vegetables                    | Other vegetables                    |
-| 63 |  220 | banana                                            | Banana                              | Banana                              |
-| 64 |  224 | coconut                                           | Coconut                             | Coconut                             |
-| 65 |  228 | orange, mausami                                   | Orange                              | Orange                              |
-| 66 |  231 | mango                                             | Mango                               | Mango                               |
-| 67 |  237 | grapes                                            | Grapes                              | Grapes                              |
-| 68 |  238 | other fresh fruits (rural)                        | Other Fruits                        | Other Fruits                        |
-| 69 |  238 | other fresh fruits (urban)                        | Other Fruits                        | Other Fruits                        |
-| 70 |  241 | groundnut                                         | Groundnuts                          | Groundnuts                          |
-| 71 |  260 | oilseeds                                          | Sesamum                             | Sesamum                             |
-| 72 |  260 | oilseeds                                          | Other oilseeds                      | Other oilseeds                      |
-| 73 |  261 | other spices                                      | Fennel                              | Fennel                              |
-| 74 |  261 | other spices                                      | Other spices                        | Other spices                        |
-| 75 |  271 | tea : leaf                                        | Tea                                 | Tea                                 |
-| 76 |  272 | coffee : cups                                     | Coffee                              | Coffee                              |
-| 77 |  280 | cooked meals purchased                            | Meals                               | Meals                               |
-| 78 |  280 | cooked meals purchased                            | Complete meals in hotel             | Complete meals in hotel             |
-| 79 |  296 | other packaged processed food (rural)             | Various processed foods             | Various processed foods             |
-| 80 |  296 | other packaged processed food (urban)             | Various processed foods             | Various processed foods             |
-| 81 |  301 | pan: finished                                     | Pan, betel, etc.                    | Pan, betel, etc.                    |
-
-
-
-
+#+attr_latex: :environment longtable :align |r|p{0.3\textwidth}|p{0.3\textwidth}||p{0.3\textwidth}|
+| Code | NSS Item                                          | ICRISAT Food Label                  | Food Label                          |
+|------+---------------------------------------------------+-------------------------------------+-------------------------------------|
+|  102 | rice  other sources                           | Paddy (Local variety)               | Rice                                |
+|  102 | rice  other sources                           | Paddy (HYV)                         | Rice                                |
+|  102 | rice  other sources                           | Rice (local variety)                | Rice                                |
+|  102 | rice  other sources                           | Rice (HYV variety)                  | Rice                                |
+|  108 | wheat/atta  other sources                     | Wheat (Local variety)               | Wheat                               |
+|  108 | wheat/atta  other sources                     | Wheat (HYV)                         | Wheat                               |
+|  115 | jowar & products                                  | Jowar/Sorghum (Local variety)       | Jowar/Sorghum                       |
+|  115 | jowar & products                                  | Jowar/Sorghum (HYV)                 | Jowar/Sorghum                       |
+|  116 | bajra & products                                  | Bajra/Pearl millet (Local variety)  | Bajra/Pearl millet                  |
+|  116 | bajra & products                                  | Bajra/Pearl millet (HYV)            | Bajra/Pearl millet                  |
+|  117 | maize & products                                  | Maize (Local variety)               | Maize                               |
+|  117 | maize & products                                  | Maize (HYV)                         | Maize                               |
+|  120 | small millets & products                          | Other minor millets                 | Other minor millets                 |
+|  121 | ragi & products                                   | Ragi/Finger millet                  | Ragi/Finger millet                  |
+|  122 | other cereals                                     | Other cereals                       | Other cereals                       |
+|  142 | gram (whole)                                      | Redgram (Tur)/Pigeonpea             | Redgram (Tur)/Pigeonpea             |
+|  142 | gram (whole)                                      | Blackgram (Urad)                    | Blackgram (Urad)                    |
+|  142 | gram (whole)                                      | Bengalgram (Chenna)/Chickpea        | Bengalgram (Chenna)/Chickpea        |
+|  142 | gram (whole)                                      | Redgram dhal                        | Redgram dhal                        |
+|  142 | gram (whole)                                      | Blackgram dhal                      | Blackgram dhal                      |
+|  142 | gram (whole)                                      | Bengalgram dhal                     | Bengalgram dhal                     |
+|  143 | moong                                             | Greengram (Mung)                    | Greengram (Mung)                    |
+|  143 | moong                                             | Greengram dhal                      | Greengram dhal                      |
+|  146 | peas                                              | Cowpea                              | Cowpea                              |
+|  148 | other pulses                                      | Soybean                             | Soybean                             |
+|  148 | other pulses                                      | Other pulses                        | Other pulses                        |
+|  148 | other pulses                                      | Other dhal                          | Other dhal                          |
+|  160 | milk: liquid                                      | Milk                                | Milk                                |
+|  163 | curd                                              | Other milk products like curd, etc. | Other milk products like curd, etc. |
+|  164 | ghee                                              | Ghee                                | Ghee                                |
+|  172 | sugar  other sources                          | Sugarcane                           | Sugarcane                           |
+|  172 | sugar  other sources                          | Sugar                               | Sugar                               |
+|  172 | sugar  other sources                          | Other sugar products                | Other sugar products                |
+|  173 | gur                                               | Gur (jaggery)                       | Gur (jaggery)                       |
+|  181 | mustard oil                                       | Mustard                             | Mustard                             |
+|  182 | groundnut oil                                     | Groundnut oil                       | Edible oils                         |
+|  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Sunflower                           | Sunflower                           |
+|  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower                           | Safflower                           |
+|  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower oil                       | Edible oils                         |
+|  185 | edible oil: others                                | Edible oils                         | Edible oils                         |
+|  185 | edible oil: others                                | Linseed                             | Linseed                             |
+|  185 | edible oil: others                                | Linseed Oil                         | Edible oils                         |
+|  190 | eggs                                              | Eggs                                | Eggs                                |
+|  191 | fish, prawn                                       | Fish                                | Fish                                |
+|  192 | goat meat/mutton                                  | Goat                                | Goat                                |
+|  192 | goat meat/mutton                                  | Sheep                               | Sheep                               |
+|  193 | beef/ buffalo meat                                | Bullocks                            | Beef                                |
+|  193 | beef/ buffalo meat                                | Cow                                 | Beef                                |
+|  193 | beef/ buffalo meat                                | Young Cattle (under 3 years)        | Beef                                |
+|  193 | beef/ buffalo meat                                | He buffalo                          | Buffalo                             |
+|  193 | beef/ buffalo meat                                | She buffalo                         | Buffalo                             |
+|  194 | pork                                              | Pig                                 | Pig                                 |
+|  195 | chicken                                           | Poultry birds                       | Poultry birds                       |
+|  200 | potato (includes sweet potato and green plantain) | Potato                              | Potato                              |
+|  201 | onion                                             | Onion                               | Onion                               |
+|  202 | tomato                                            | Tomato                              | Tomato                              |
+|  203 | brinjal                                           | Brinjal                             | Brinjal                             |
+|  206 | palak/other leafy vegetables                      | Leafy vegetables                    | Leafy vegetables                    |
+|  207 | chillis: green                                    | Chillies                            | Chillies                            |
+|  212 | cabbage                                           | Cabbage                             | Cabbage                             |
+|  216 | lemon                                             | Lemon                               | Lemon                               |
+|  217 | other vegetables (rural)                          | Other vegetables                    | Other vegetables                    |
+|  217 | other vegetables (urban)                          | Other vegetables                    | Other vegetables                    |
+|  220 | banana                                            | Banana                              | Banana                              |
+|  224 | coconut                                           | Coconut                             | Coconut                             |
+|  228 | orange, mausami                                   | Orange                              | Orange                              |
+|  231 | mango                                             | Mango                               | Mango                               |
+|  237 | grapes                                            | Grapes                              | Grapes                              |
+|  238 | other fresh fruits (rural)                        | Other Fruits                        | Other Fruits                        |
+|  238 | other fresh fruits (urban)                        | Other Fruits                        | Other Fruits                        |
+|  241 | groundnut                                         | Groundnuts                          | Groundnuts                          |
+|  260 | oilseeds                                          | Sesamum                             | Sesamum                             |
+|  260 | oilseeds                                          | Other oilseeds                      | Other oilseeds                      |
+|  261 | other spices                                      | Fennel                              | Fennel                              |
+|  261 | other spices                                      | Other spices                        | Other spices                        |
+|  271 | tea : leaf                                        | Tea                                 | Tea                                 |
+|  272 | coffee : cups                                     | Coffee                              | Coffee                              |
+|  280 | cooked meals purchased                            | Meals                               | Meals                               |
+|  280 | cooked meals purchased                            | Complete meals in hotel             | Complete meals in hotel             |
+|  296 | other packaged processed food (rural)             | Various processed foods             | Various processed foods             |
+|  296 | other packaged processed food (urban)             | Various processed foods             | Various processed foods             |
+|  301 | pan: finished                                     | Pan, betel, etc.                    | Pan, betel, etc.                    |
 
 
 
@@ -814,9 +952,12 @@ def quantities(X,P,tol=1e-6):
             useX = X.query("t==%d and m=='%s'" % (t,m)).fillna(0)
             try:
                 useP = P.xs((t,m)).fillna(0).unstack('unit')
-                foo = useX.align(useP.T,axis=1,join='inner')
+                myX, myP = useX.align(useP.T,axis=1,join='inner')
+                myX.fillna(0,inplace=True)
+                myP.fillna(0,inplace=True)
                 if len(useX):
-                    myQ = foo[0]@pd.DataFrame(np.linalg.pinv(foo[1]),index=foo[1].columns,columns=foo[1].index)
+                    myQ = np.linalg.lstsq(myP.T,myX.T)
+                    myQ = pd.DataFrame(myQ,index=myP[1].columns,columns=myP[1].index)
                     myQ = myQ.loc[:,(myQ > tol).sum()>1]
                     Q[(t,m)] = myQ
             except KeyError: pass
@@ -878,6 +1019,49 @@ myP0.to_pickle('prices.df')
 
 #+results:
 
+* Impute quantities
+#+begin_src python :tangle /tmp/quantities.py
+import pandas as pd
+import numpy as np
+
+def quantities(X,P,tol=1e-6):
+    """
+    Return standardized quantities from expenditures & prices.
+
+    Inputs are:
+        - X :: DataFrame of expenditures, with index (j,t,m)
+        - P :: DataFrame of prices, with index (i,unit,m,t)
+               and columns (i,m,t).
+    """
+
+    Q={}
+    for t in X.index.levels[1]:
+        for m in X.index.levels[2]:
+            useX = X.query("t==%d and m=='%s'" % (t,m)).fillna(0)
+            try:
+                useP = P.xs((t,m)).fillna(0).unstack('unit')
+                myX, myP = useX.align(useP.T,axis=1,join='inner')
+                myX.fillna(0,inplace=True)
+                myP.fillna(0,inplace=True)
+                myQ = {}
+                if len(useX):
+                    #myQ = np.linalg.lstsq(myP.T,myX.T,rcond=None)[0]
+                    # X(Nxn) = Q(Nxn)@P(nxk) => Q = XP^+
+                    Pinv = pd.DataFrame(np.linalg.pinv(myP),index=myX.columns,columns=myP.index)
+                    for u in Pinv:
+                        myQ[u] = myX.mul(Pinv[u])
+                    myQ = pd.concat(myQ,names='u').unstack('u')
+                    myQ = myQ.loc[:,(myQ > tol).sum()>1]
+                    Q[(t,m)] = myQ
+            except KeyError: pass
+
+    return pd.concat(Q)
+
+P = pd.read_pickle('/tmp/myp.pickle')
+X = pd.read_pickle('/tmp/myx.pickle')
+
+Q = quantities(X,P,tol=1e-6)
+#+end_src
 
 * Demographics from Schedule C
 #+begin_src python :tangle c.py
@@ -987,7 +1171,7 @@ z = pd.read_pickle('z.df')
 #z = z.reorder_levels(['j','t','m'])
 
 spread.df_to_sheet(np.exp(y),sheet="Expenditures")
-spread.df_to_sheet(z,sheet="Household Characteristics")
+spread.df_to_sheet(z,sheet="HH Characteristics")
 spread.df_to_sheet(q,sheet="Consumption")
 spread.df_to_sheet(pd.read_pickle('fct.df'),sheet="FCT")
 
