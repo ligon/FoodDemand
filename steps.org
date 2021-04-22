@@ -152,12 +152,17 @@ kilograms) we can map into the  FCT.
 xhatdf = xhat.to_dataset('i').to_dataframe()
 xhatdf.columns.name ='i'
 
-phat = xhatdf/q
-
 # Keep kgs; g
 phat = phat.xs('kg',level='u').groupby(['t','m']).median().dropna(how='all')
 #+end_src
 
+Keep prices in result...
+#+begin_src ipython
+result['prices'] = phat.stack().to_xarray()
+
+# Make this persistent...
+result.to_dataset('./foo.ds')
+#+end_src
 
 * Step 4: Predicting Positive Consumption                        
 An issue with our assessment of fit is that we /predicted/ that every
@@ -313,4 +318,29 @@ Before this will work, need columns of qhat to match columns of fct.
 nutrients = myq@myfct
 nutrients.mean()    # NB: Nutrients are for past /week/ for entire household.
 #+end_src
+
+
+
+* Step 7: Define Nutrient Demands
+  Define a convenience function to easily change one price at a time...
+#+begin_src ipython :results silent
+def my_prices(p0,p=p,i='Coconut'):
+    p = p.copy()
+    p.loc[i] = p0
+    return p
+#+end_src
+
+Of course, since we can compute the nutritional content of a vector of
+consumption goods, we can also use our demand functions to
+compute nutrition as a /function/ of prices and budget.  
+
+#+begin_src ipython
+def nutrient_demand(x,p):
+    c = r.demands(x,p)
+    fct0,c0 = fct.align(c,axis=0,join='inner')
+    N = fct0.T@c0
+
+    return N
+#+end_src
+
 
