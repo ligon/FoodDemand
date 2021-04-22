@@ -288,7 +288,7 @@ Q = Q.replace(0,np.nan)
 # Repeat because units renamed, not bijective
 Q = Q.groupby(['j','t','m','u','i']).sum() # Add similar categories
 
-Q = Q.unstack(['i','u'])
+Q = Q.unstack(['i'])
 
 Q.to_pickle('q.df')
 
@@ -297,6 +297,139 @@ print(df_to_orgtbl((Q>0).sum().sort_values(ascending=False),float_fmt="%d"))
 #+end_src
 
 #+results:
+| i                                                             |    0 |
+|---------------------------------------------------------------+------|
+| Utilities                                                     | 1875 |
+| Jowar/Sorghum                                                 | 1191 |
+| Rice                                                          | 1183 |
+| Bengalgram Dhal                                               | 1029 |
+| Redgram Dhal                                                  | 1014 |
+| Milk                                                          | 1012 |
+| Wheat                                                         |  991 |
+| Chillies                                                      |  987 |
+| Edible Oils                                                   |  973 |
+| Gur (Jaggery)                                                 |  946 |
+| Onion                                                         |  890 |
+| Cosmetics tooth paste etc.                                    |  866 |
+| Sugar                                                         |  822 |
+| Other Spices                                                  |  810 |
+| Goat                                                          |  798 |
+| Brinjal                                                       |  794 |
+| Tea                                                           |  779 |
+| Other Vegetables                                              |  774 |
+| Coconut                                                       |  678 |
+| Tobacco, Beedi                                                |  541 |
+| Tomato                                                        |  471 |
+| Groundnuts                                                    |  438 |
+| Other Dhal                                                    |  429 |
+| Processed foods (e.g. biscuits Khara, syrup, baby food, etc.) |  390 |
+| Other Fruits                                                  |  363 |
+| Other consumption                                             |  360 |
+| Eggs                                                          |  330 |
+| Bajra/Pearl Millet                                            |  286 |
+| Greengram Dhal                                                |  283 |
+| Mango                                                         |  262 |
+| Ghee                                                          |  262 |
+| Soap, washing powder                                          |  260 |
+| Poultry Birds                                                 |  248 |
+| Fish                                                          |  244 |
+| Greengram (Mung)                                              |  235 |
+| Redgram (Tur)/Pigeonpea                                       |  220 |
+| Other Pulses                                                  |  196 |
+| Blackgram (Urad)                                              |  190 |
+| Bengalgram (Chenna)/Chickpea                                  |  189 |
+| Cabbage                                                       |  181 |
+| Castor                                                        |  181 |
+| Maize                                                         |  178 |
+| Pan, Betel, etc.                                              |  163 |
+| Ceremonial expenses                                           |  161 |
+| Other Sugar Products                                          |  108 |
+| Beef                                                          |   95 |
+| Blackgram Dhal                                                |   89 |
+| Other Narcotics                                               |   65 |
+| Medicine, cosmetics, etc.                                     |   47 |
+| Sheep                                                         |   45 |
+| Other Cereals                                                 |   43 |
+| Other Minor Millets                                           |   37 |
+| Lemon                                                         |   35 |
+| Sesamum                                                       |   34 |
+| Clothing                                                      |   30 |
+| Cowpea                                                        |   25 |
+| Leafy Vegetables                                              |   24 |
+| Orange                                                        |   23 |
+| Safflower                                                     |   23 |
+| Other Food                                                    |   21 |
+| Grapes                                                        |   18 |
+| Sugarcane                                                     |   16 |
+| Educational material expenses (pen, books, paper, etc.)       |   16 |
+| Cotton                                                        |   15 |
+| Other Milk Products Like Curd, etc.                           |   15 |
+| Potato                                                        |   14 |
+| Coffee                                                        |   11 |
+| Sunflower                                                     |   10 |
+| ZK                                                            |    9 |
+| Mustard                                                       |    9 |
+| Other livestock                                               |    9 |
+| Banana                                                        |    7 |
+| Buffalo                                                       |    7 |
+| Grinding/milling charges                                      |    6 |
+| KQ                                                            |    6 |
+| YK                                                            |    6 |
+| BK                                                            |    5 |
+| Linseed                                                       |    5 |
+| ZF                                                            |    4 |
+| Other personal                                                |    4 |
+| Meals                                                         |    3 |
+| Barber service (and material relating to it)                  |    3 |
+| Travel & Entertainment                                        |    3 |
+| QJ                                                            |    3 |
+| EY                                                            |    3 |
+| HB                                                            |    3 |
+| Other Animal Products                                         |    2 |
+| ZJ                                                            |    2 |
+| Other Fiber Crops                                             |    2 |
+| KJ                                                            |    2 |
+| Ragi/Finger Millet                                            |    2 |
+| LN                                                            |    2 |
+| QC                                                            |    2 |
+| AN                                                            |    2 |
+| AB                                                            |    2 |
+| CV                                                            |    2 |
+| BN                                                            |    1 |
+| Medicine Doctor's fees                                        |    1 |
+| LY                                                            |    1 |
+| AV                                                            |    1 |
+| VM                                                            |    1 |
+| ZB                                                            |    1 |
+| ZA                                                            |    1 |
+| YZ                                                            |    1 |
+| KL                                                            |    1 |
+| YB                                                            |    1 |
+| Wool, Goat Hair, etc.                                         |    1 |
+| 5B                                                            |    1 |
+| 4K                                                            |    1 |
+| Soybean                                                       |    1 |
+| UB                                                            |    1 |
+| IF                                                            |    1 |
+| Other Oilseeds                                                |    1 |
+| Other                                                         |    1 |
+| NR                                                            |    1 |
+| GJ                                                            |    1 |
+| GD                                                            |    1 |
+| GB                                                            |    1 |
+| PP                                                            |    1 |
+| Fennel                                                        |    1 |
+| FF                                                            |    1 |
+| Pig                                                           |    1 |
+| QF                                                            |    1 |
+| ES                                                            |    1 |
+| HP                                                            |    1 |
+| RF                                                            |    1 |
+| SG                                                            |    1 |
+| SN                                                            |    1 |
+| SR                                                            |    1 |
+| 2G                                                            |    1 |
+
 
 
 
@@ -790,6 +923,7 @@ myP0 = myP.copy()
 #myP0.columns = myP0.columns.droplevel('u')
 
 myP0 = myP0.dropna(how='all')
+myP0 = myP0.stack('u')
 myP0.to_pickle('prices.df')
 
 #Qhat = quantities(X,P)
@@ -972,6 +1106,8 @@ print(spread.sheets)
 #+end_src
 
 #+results:
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>]
