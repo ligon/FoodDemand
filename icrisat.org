@@ -45,8 +45,8 @@ item codes.
    | Maize (HYV)                                                   | CF   | Maize                                                         |
    | Ragi/Finger millet                                            | CG   | Ragi/Finger Millet                                            |
    | Other minor millets                                           | CH   | Other Minor Millets                                           |
-   | Paddy (Local variety)                                         | CJ   | Rice                                                          |
-   | Paddy (HYV)                                                   | CK   | Rice                                                          |
+   | Paddy (Local variety)                                         | CJ   | Paddy                                                         |
+   | Paddy (HYV)                                                   | CK   | Paddy                                                         |
    | Wheat (Local variety)                                         | CL   | Wheat                                                         |
    | Wheat (HYV)                                                   | CM   | Wheat                                                         |
    | Rice (local variety)                                          | CN   | Rice                                                          |
@@ -252,7 +252,11 @@ Units = {'Q':'Quintal',
          'N':'Number',
          'A':'Acres',
          'H':'Hours',
-         'S':'Square feet'}
+         'S':'Square feet',
+         '.':'Rs',  # The following are not valid unit codes,  but may be in rupees.
+         '1':'Rs',
+         '5':'Rs',
+         'G':'Rs'}
 
 # Fix year indicators
 X.rename({0.:80,1:81,2:82,3:83,4:84,5:75,6:76,7:77,8:78,9:79},level='year',inplace=True)
@@ -301,7 +305,7 @@ print(df_to_orgtbl((Q>0).sum().sort_values(ascending=False),float_fmt="%d"))
 |---------------------------------------------------------------+------|
 | Utilities                                                     | 1875 |
 | Jowar/Sorghum                                                 | 1191 |
-| Rice                                                          | 1183 |
+| Rice                                                          | 1046 |
 | Bengalgram Dhal                                               | 1029 |
 | Redgram Dhal                                                  | 1014 |
 | Milk                                                          | 1012 |
@@ -323,6 +327,7 @@ print(df_to_orgtbl((Q>0).sum().sort_values(ascending=False),float_fmt="%d"))
 | Groundnuts                                                    |  438 |
 | Other Dhal                                                    |  429 |
 | Processed foods (e.g. biscuits Khara, syrup, baby food, etc.) |  390 |
+| Paddy                                                         |  371 |
 | Other Fruits                                                  |  363 |
 | Other consumption                                             |  360 |
 | Eggs                                                          |  330 |
@@ -338,8 +343,8 @@ print(df_to_orgtbl((Q>0).sum().sort_values(ascending=False),float_fmt="%d"))
 | Other Pulses                                                  |  196 |
 | Blackgram (Urad)                                              |  190 |
 | Bengalgram (Chenna)/Chickpea                                  |  189 |
-| Cabbage                                                       |  181 |
 | Castor                                                        |  181 |
+| Cabbage                                                       |  181 |
 | Maize                                                         |  178 |
 | Pan, Betel, etc.                                              |  163 |
 | Ceremonial expenses                                           |  161 |
@@ -356,12 +361,12 @@ print(df_to_orgtbl((Q>0).sum().sort_values(ascending=False),float_fmt="%d"))
 | Clothing                                                      |   30 |
 | Cowpea                                                        |   25 |
 | Leafy Vegetables                                              |   24 |
-| Orange                                                        |   23 |
 | Safflower                                                     |   23 |
+| Orange                                                        |   23 |
 | Other Food                                                    |   21 |
 | Grapes                                                        |   18 |
-| Sugarcane                                                     |   16 |
 | Educational material expenses (pen, books, paper, etc.)       |   16 |
+| Sugarcane                                                     |   16 |
 | Cotton                                                        |   15 |
 | Other Milk Products Like Curd, etc.                           |   15 |
 | Potato                                                        |   14 |
@@ -429,6 +434,7 @@ print(df_to_orgtbl((Q>0).sum().sort_values(ascending=False),float_fmt="%d"))
 | SN                                                            |    1 |
 | SR                                                            |    1 |
 | 2G                                                            |    1 |
+
 
 
 
@@ -724,10 +730,141 @@ fct = fct.reset_index().set_index(['Food Label','unit'])
 fct=fct[~fct.index.duplicated()][nutrients]
 fct.to_pickle('fct_units.df')
 
+######### FCT Cleanup #################
+# Change some labels
+d={'protein':'Protein',
+   'protein g':'Protein',
+   'fat':'Fat',
+   'energy_kcal':'Calories',
+   'energy kcal':'Calories',
+   'calcium':'Calcium',
+   'ca mg':'Calcium',
+   'betacarotene':'Betacarotene',
+   'thiamine':'Thiamine',
+   'riboflavin':'Riboflavin',
+   'niacin':'Niacin',
+   'iron':'Iron',
+   'fe mg':'Iron',
+   'ascorbic_total':'Ascorbic Acid',
+   'vit a ug':'Vitamin A',
+   'vit b6 mg':'Vitamin B6',
+   'vit b12 ug':'Vitamin B12',
+   'vit d ug':'Vitamin D',
+   'vit e ug':'Vitamin E',
+   'vit c mg':'Vitamin C',
+   'mg mg':'Magnesium',
+   'zn mg':'Zinc'}
+
+fct = fct.rename(columns=d)
+
+# Just use nutrients that are in fct
+fct = fct[fct.columns.intersection(list(d.values()))]
+
+try:
+    fct.index = fct.index.droplevel('unit')
+except AttributeError: pass # No units?
+
+# Fix capitalization (to match food labels)
+fct.index = fct.reset_index()['Food Label'].str.title()
+fct.index.name = 'i'
+
+# Replace missing with zeros
 fct = fct.fillna(0)
+
+fct = fct.loc[:,~fct.columns.duplicated()]
+#######################################
 
 fct.to_pickle('fct.df')
 #+end_src
+
+#+results:
+|    | Code | NSS Item                                          | ICRISAT Food Label                  | Food Label                          |
+|----+------+---------------------------------------------------+-------------------------------------+-------------------------------------|
+|  0 |  102 | rice  other sources                           | Paddy (Local variety)               | Rice                                |
+|  1 |  102 | rice  other sources                           | Paddy (HYV)                         | Rice                                |
+|  2 |  102 | rice  other sources                           | Rice (local variety)                | Rice                                |
+|  3 |  102 | rice  other sources                           | Rice (HYV variety)                  | Rice                                |
+|  4 |  108 | wheat/atta  other sources                     | Wheat (Local variety)               | Wheat                               |
+|  5 |  108 | wheat/atta  other sources                     | Wheat (HYV)                         | Wheat                               |
+|  6 |  115 | jowar & products                                  | Jowar/Sorghum (Local variety)       | Jowar/Sorghum                       |
+|  7 |  115 | jowar & products                                  | Jowar/Sorghum (HYV)                 | Jowar/Sorghum                       |
+|  8 |  116 | bajra & products                                  | Bajra/Pearl millet (Local variety)  | Bajra/Pearl Millet                  |
+|  9 |  116 | bajra & products                                  | Bajra/Pearl millet (HYV)            | Bajra/Pearl Millet                  |
+| 10 |  117 | maize & products                                  | Maize (Local variety)               | Maize                               |
+| 11 |  117 | maize & products                                  | Maize (HYV)                         | Maize                               |
+| 12 |  120 | small millets & products                          | Other minor millets                 | Other Minor Millets                 |
+| 13 |  121 | ragi & products                                   | Ragi/Finger millet                  | Ragi/Finger Millet                  |
+| 14 |  122 | other cereals                                     | Other cereals                       | Other Cereals                       |
+| 15 |  142 | gram (whole)                                      | Redgram (Tur)/Pigeonpea             | Redgram (Tur)/Pigeonpea             |
+| 16 |  142 | gram (whole)                                      | Blackgram (Urad)                    | Blackgram (Urad)                    |
+| 17 |  142 | gram (whole)                                      | Bengalgram (Chenna)/Chickpea        | Bengalgram (Chenna)/Chickpea        |
+| 18 |  142 | gram (whole)                                      | Redgram dhal                        | Redgram Dhal                        |
+| 19 |  142 | gram (whole)                                      | Blackgram dhal                      | Blackgram Dhal                      |
+| 20 |  142 | gram (whole)                                      | Bengalgram dhal                     | Bengalgram Dhal                     |
+| 21 |  143 | moong                                             | Greengram (Mung)                    | Greengram (Mung)                    |
+| 22 |  143 | moong                                             | Greengram dhal                      | Greengram Dhal                      |
+| 23 |  146 | peas                                              | Cowpea                              | Cowpea                              |
+| 24 |  148 | other pulses                                      | Soybean                             | Soybean                             |
+| 25 |  148 | other pulses                                      | Other pulses                        | Other Pulses                        |
+| 26 |  148 | other pulses                                      | Other dhal                          | Other Dhal                          |
+| 27 |  160 | milk: liquid                                      | Milk                                | Milk                                |
+| 28 |  163 | curd                                              | Other milk products like curd, etc. | Other milk products like curd, etc. |
+| 29 |  164 | ghee                                              | Ghee                                | Ghee                                |
+| 30 |  172 | sugar  other sources                          | Sugarcane                           | Sugarcane                           |
+| 31 |  172 | sugar  other sources                          | Sugar                               | Sugar                               |
+| 32 |  172 | sugar  other sources                          | Other sugar products                | Other Sugar Products                |
+| 33 |  173 | gur                                               | Gur (jaggery)                       | Gur (Jaggery)                       |
+| 34 |  181 | mustard oil                                       | Mustard                             | Mustard                             |
+| 35 |  182 | groundnut oil                                     | Groundnut oil                       | Edible Oils                         |
+| 36 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Sunflower                           | Sunflower                           |
+| 37 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower                           | Safflower                           |
+| 38 |  184 | refined oil [sunflower, soyabean, saffola, etc.]  | Safflower oil                       | Edible Oils                         |
+| 39 |  185 | edible oil: others                                | Edible oils                         | Edible Oils                         |
+| 40 |  185 | edible oil: others                                | Linseed                             | Linseed                             |
+| 41 |  185 | edible oil: others                                | Linseed Oil                         | Edible Oils                         |
+| 42 |  190 | eggs                                              | Eggs                                | Eggs                                |
+| 43 |  191 | fish, prawn                                       | Fish                                | Fish                                |
+| 44 |  192 | goat meat/mutton                                  | Goat                                | Goat                                |
+| 45 |  192 | goat meat/mutton                                  | Sheep                               | Sheep                               |
+| 46 |  193 | beef/ buffalo meat                                | Bullocks                            | Beef                                |
+| 47 |  193 | beef/ buffalo meat                                | Cow                                 | Beef                                |
+| 48 |  193 | beef/ buffalo meat                                | Young Cattle (under 3 years)        | Beef                                |
+| 49 |  193 | beef/ buffalo meat                                | He buffalo                          | Buffalo                             |
+| 50 |  193 | beef/ buffalo meat                                | She buffalo                         | Buffalo                             |
+| 51 |  194 | pork                                              | Pig                                 | Pig                                 |
+| 52 |  195 | chicken                                           | Poultry birds                       | Poultry Birds                       |
+| 53 |  200 | potato (includes sweet potato and green plantain) | Potato                              | Potato                              |
+| 54 |  201 | onion                                             | Onion                               | Onion                               |
+| 55 |  202 | tomato                                            | Tomato                              | Tomato                              |
+| 56 |  203 | brinjal                                           | Brinjal                             | Brinjal                             |
+| 57 |  206 | palak/other leafy vegetables                      | Leafy vegetables                    | Leafy vegetables                    |
+| 58 |  207 | chillis: green                                    | Chillies                            | Chillies                            |
+| 59 |  212 | cabbage                                           | Cabbage                             | Cabbage                             |
+| 60 |  216 | lemon                                             | Lemon                               | Lemon                               |
+| 61 |  217 | other vegetables (rural)                          | Other vegetables                    | Other Vegetables                    |
+| 62 |  217 | other vegetables (urban)                          | Other vegetables                    | Other Vegetables                    |
+| 63 |  220 | banana                                            | Banana                              | Banana                              |
+| 64 |  224 | coconut                                           | Coconut                             | Coconut                             |
+| 65 |  228 | orange, mausami                                   | Orange                              | Orange                              |
+| 66 |  231 | mango                                             | Mango                               | Mango                               |
+| 67 |  237 | grapes                                            | Grapes                              | Grapes                              |
+| 68 |  238 | other fresh fruits (rural)                        | Other Fruits                        | Other Fruits                        |
+| 69 |  238 | other fresh fruits (urban)                        | Other Fruits                        | Other Fruits                        |
+| 70 |  241 | groundnut                                         | Groundnuts                          | Groundnuts                          |
+| 71 |  260 | oilseeds                                          | Sesamum                             | Sesamum                             |
+| 72 |  260 | oilseeds                                          | Other oilseeds                      | Other Oilseeds                      |
+| 73 |  261 | other spices                                      | Fennel                              | Fennel                              |
+| 74 |  261 | other spices                                      | Other spices                        | Other Spices                        |
+| 75 |  271 | tea : leaf                                        | Tea                                 | Tea                                 |
+| 76 |  272 | coffee : cups                                     | Coffee                              | Coffee                              |
+| 77 |  280 | cooked meals purchased                            | Meals                               | Meals                               |
+| 78 |  280 | cooked meals purchased                            | Complete meals in hotel             | Complete meals in hotel             |
+| 79 |  296 | other packaged processed food (rural)             | Various processed foods             | Various processed foods             |
+| 80 |  296 | other packaged processed food (urban)             | Various processed foods             | Various processed foods             |
+| 81 |  301 | pan: finished                                     | Pan, betel, etc.                    | Pan, betel, etc.                    |
+
+
+
 
 
 #+name: tab:nss_and_icrisat_foods
@@ -833,7 +970,6 @@ def prices(Q,X,tol=1e-6):
 
     Non-trivial because quantities may be reported in different units.
     """
-    Q = Q.stack('u')
     myQ = Q.groupby(['j','t','m','u']).sum()
 
     B={}
@@ -1100,12 +1236,16 @@ spread.df_to_sheet(z,sheet="HH Characteristics")
 spread.df_to_sheet(q,sheet="Consumption")
 spread.df_to_sheet(p,sheet="Prices")
 spread.df_to_sheet(pd.read_pickle('fct.df'),sheet="FCT")
+spread.df_to_sheet(pd.read_pickle('../HackingFood/IndianICRISAT/rda.df'),sheet="RDI")
 
 print(spread.sheets)
 
 #+end_src
 
 #+results:
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'Prices' id:369222129>, <Worksheet 'FCT' id:814160050>, <Worksheet 'RDI' id:396245996>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
@@ -1131,16 +1271,26 @@ y = y.loc[:,y.count()>10]
 
 prices = pd.read_pickle('prices.df')
 prices = prices.loc[:,prices.columns.isin(q.columns)]
+prices = prices.groupby(['t','u']).median()
 
 #y = np.log(pd.read_pickle('q.df').replace(0,np.nan))
 
 # Treat as single unit
-#y = y.reset_index()
-#y['m']='SAT'
-#y = y.set_index(['j','t','m'])
-#z = z.reset_index()
-#z['m']='SAT'
-#z = z.set_index(['j','m','t'])
+y = y.reset_index()
+y['m']='SAT'
+y = y.set_index(['j','t','m'])
+
+q = q.reset_index()
+q['m']='SAT'
+q = q.set_index(['j','t','m','u'])
+
+z = z.reset_index()
+z['m']='SAT'
+z = z.set_index(['j','t','m'])
+
+prices = prices.reset_index()
+prices['m'] = 'SAT'
+prices = prices.set_index(['t','m','u'])
 
 result = cfe.Result(y=y,z=z,prices=prices,verbose=True)
 #result = cfe.Result(y=y,z=z,verbose=True)
@@ -1155,6 +1305,46 @@ result.to_dataset('icrisat.ds')
 #+end_src
 
 #+results:
+min_proportion_items test drops 274 households.
+Dropping Coffee.
+Dropping Cotton.
+Dropping Cowpea.
+Dropping Grapes.
+Dropping Other.
+Dropping Other Food.
+Dropping Other Milk Products Like Curd, etc..
+Dropping Other livestock.
+Dropping Potato.
+Dropping QC.
+Dropping Safflower.
+Dropping ZK.
+Dropping QJ.
+Dropping Meals.
+Dropping Sheep.
+Dropping GN.
+Dropping Sesamum.
+Dropping Other Cereals.
+Dropping Orange.
+Dropping Other Minor Millets.
+Dropping Leafy Vegetables.
+Dropping Castor.
+Dropping Blackgram Dhal.
+Dropping Medicine, cosmetics, etc..
+Dropping Beef.
+Dropping Lemon.
+Dropping Other Clothing.
+Dropping Other Pulses.
+Dropping Maize.
+Dropping Cabbage.
+Dropping Sugarcane.
+Dropping Blackgram (Urad).
+Dropping Greengram (Mung).
+Dropping Bengalgram (Chenna)/Chickpea.
+Dropping Educational expenses (fees).
+Dropping Redgram (Tur)/Pigeonpea.
+Dropping Greengram Dhal.
+drop_columns_wo_covariance test drops 0 households and 37 goods.
+good in every (t,m) test drops 0 households and 16 goods.
 min_proportion_items test drops 274 households.
 Dropping Coffee.
 Dropping Cotton.
@@ -1230,6 +1420,53 @@ Coordinates:
   * i        (i) object 'Bengalgram dhal' 'Ceremonial expenses' ... 'Utilities'
 
 :end:
+
+
+* Write DataFrames to google sheet Mark II
+  Same idea, but write results after dropping goods and households in estimation.
+#+begin_src python :results output :var user="instructors@eep153.iam.gserviceaccount.com" spread_fn="13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo"
+import pandas as pd
+import numpy as np
+import cfe
+from gspread_pandas import Client, Spread
+from gspread_pandas.client import SpreadsheetNotFound
+
+client = Client()
+
+try:
+    spread = Spread(spread_fn,client=client)
+except SpreadsheetNotFound:
+    client.create(spread_fn)
+    spread = Spread(spread_fn,client=client)
+    spread.delete_sheet('Sheet1')
+
+r = cfe.from_dataset('icrisat.ds')
+
+y = r.y.to_dataframe('').squeeze().unstack('i')
+z = r.z.to_dataframe('').squeeze().unstack('k')
+p = r.prices.to_dataframe('').squeeze().unstack('i')
+
+x = np.exp(y)
+
+q = pd.read_pickle('q.df')
+
+spread.df_to_sheet(np.exp(y),sheet="Expenditures")
+spread.df_to_sheet(z,sheet="HH Characteristics")
+spread.df_to_sheet(q,sheet="Consumption")
+spread.df_to_sheet(p,sheet="Prices")
+spread.df_to_sheet(pd.read_pickle('fct.df'),sheet="FCT")
+
+print(spread.sheets)
+
+#+end_src
+
+#+results:
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>]
+
 
 
 * Expenditures and Nutrients vs. \log\lambda
