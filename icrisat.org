@@ -719,7 +719,7 @@ fooditems = nss68[['NSS Item']].join(foodcodes,how='right')
 print(df_to_orgtbl(fooditems.reset_index(),float_fmt='%d'))
 
 fct = foodcodes.join(nss68) # ICRISAT food conversion table
-fct.loc[fct.unit=='Grams',nutrients] = fct.loc[fct.unit=='Grams',nutrients]*1000
+fct.loc[fct.unit=='Grams',nutrients] = fct.loc[fct.unit=='Grams',nutrients]/1000
 fct.loc[fct.unit=='Grams','unit'] = 'Kilograms'
 
 fct.loc[fct.unit=='Hundreds',nutrients] = fct.loc[fct.unit=='Hundreds',nutrients]*100
@@ -1291,6 +1291,8 @@ z = z.set_index(['j','t','m'])
 prices = prices.reset_index()
 prices['m'] = 'SAT'
 prices = prices.set_index(['t','m','u'])
+prices = prices.xs('Kilograms',level='u')
+
 
 result = cfe.Result(y=y,z=z,prices=prices,verbose=True)
 #result = cfe.Result(y=y,z=z,verbose=True)
@@ -1305,6 +1307,47 @@ result.to_dataset('icrisat.ds')
 #+end_src
 
 #+results:
+min_proportion_items test drops 265 households.
+Dropping Coffee.
+Dropping Cotton.
+Dropping Cowpea.
+Dropping Grapes.
+Dropping Other.
+Dropping Other Food.
+Dropping Other Milk Products Like Curd, etc..
+Dropping Other livestock.
+Dropping Potato.
+Dropping QC.
+Dropping Safflower.
+Dropping ZK.
+Dropping QJ.
+Dropping Meals.
+Dropping Sheep.
+Dropping GN.
+Dropping Sesamum.
+Dropping Other Cereals.
+Dropping Orange.
+Dropping Other Minor Millets.
+Dropping Leafy Vegetables.
+Dropping Blackgram Dhal.
+Dropping Castor.
+Dropping Medicine, cosmetics, etc..
+Dropping Beef.
+Dropping Lemon.
+Dropping Other Clothing.
+Dropping Paddy.
+Dropping Other Pulses.
+Dropping Maize.
+Dropping Cabbage.
+Dropping Sugarcane.
+Dropping Blackgram (Urad).
+Dropping Greengram (Mung).
+Dropping Bengalgram (Chenna)/Chickpea.
+Dropping Educational expenses (fees).
+Dropping Redgram (Tur)/Pigeonpea.
+Dropping Greengram Dhal.
+drop_columns_wo_covariance test drops 0 households and 38 goods.
+good in every (t,m) test drops 0 households and 16 goods.
 min_proportion_items test drops 274 households.
 Dropping Coffee.
 Dropping Cotton.
@@ -1443,6 +1486,8 @@ except SpreadsheetNotFound:
 r = cfe.from_dataset('icrisat.ds')
 
 y = r.y.to_dataframe('').squeeze().unstack('i')
+y = y.loc[:,~y.columns.duplicated()]
+
 z = r.z.to_dataframe('').squeeze().unstack('k')
 p = r.prices.to_dataframe('').squeeze().unstack('i')
 
@@ -1450,17 +1495,29 @@ x = np.exp(y)
 
 q = pd.read_pickle('q.df')
 
+rda = pd.read_pickle('../HackingFood/IndianICRISAT/rda.df')
+rda.columns.name = 'n'
+
 spread.df_to_sheet(np.exp(y),sheet="Expenditures")
 spread.df_to_sheet(z,sheet="HH Characteristics")
 spread.df_to_sheet(q,sheet="Consumption")
 spread.df_to_sheet(p,sheet="Prices")
 spread.df_to_sheet(pd.read_pickle('fct.df'),sheet="FCT")
+spread.df_to_sheet(rda.T,sheet="RDI")
 
 print(spread.sheets)
 
 #+end_src
 
 #+results:
+[<Worksheet 'Expenditures' id:777459546>, <Worksheet 'HH Characteristics' id:1181346610>, <Worksheet 'Consumption' id:2117126364>, <Worksheet 'Prices' id:6978231>, <Worksheet 'FCT' id:561083605>, <Worksheet 'RDI' id:38574743>]
+[<Worksheet 'Sheet1' id:1876586206>, <Worksheet 'Expenditures' id:777459546>, <Worksheet 'HH Characteristics' id:1181346610>, <Worksheet 'Consumption' id:2117126364>, <Worksheet 'Prices' id:6978231>, <Worksheet 'FCT' id:561083605>, <Worksheet 'RDI' id:93730084>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:814160050>, <Worksheet 'RDI' id:396245996>, <Worksheet 'Prices' id:1876586206>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'Prices' id:369222129>, <Worksheet 'FCT' id:814160050>, <Worksheet 'RDI' id:396245996>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'Prices' id:369222129>, <Worksheet 'FCT' id:814160050>, <Worksheet 'RDI' id:396245996>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'Prices' id:369222129>, <Worksheet 'FCT' id:814160050>, <Worksheet 'RDI' id:396245996>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'Prices' id:369222129>, <Worksheet 'FCT' id:814160050>, <Worksheet 'RDI' id:396245996>]
+[<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'Prices' id:369222129>, <Worksheet 'FCT' id:814160050>, <Worksheet 'RDI' id:396245996>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
 [<Worksheet 'Expenditures' id:744482690>, <Worksheet 'HH Characteristics' id:1760828959>, <Worksheet 'Consumption' id:1987214981>, <Worksheet 'FCT' id:936160040>, <Worksheet 'Prices' id:369222129>]
