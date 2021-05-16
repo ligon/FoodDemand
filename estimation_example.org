@@ -6,10 +6,10 @@ Constant Frisch Elasticity (CFE) demand systems.
 There are two prerequisites; the first is the =CFEDemands= python
 module, which can be installed with a simple:
 #+begin_src ipython :tangle no
-!pip install CFEDemands --upgrade
-!pip install xarray
-!pip install dvc
-!pip install oauth2client
+#!pip install CFEDemands --upgrade
+#!pip install xarray
+#!pip install dvc
+#!pip install oauth2client
 #+end_src
 
 The second prerequisite is a dataset including detailed information on
@@ -31,8 +31,8 @@ description given below.
 An example spreadsheet can be found at
 https://docs.google.com/spreadsheets/d/13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo/.
 
-This spreadsheet consists of two worksheets, labeled "Expenditures"
-and "Household Characteristics", respectively.
+This spreadsheet consists of three worksheets, labeled "Expenditures",
+"Household Characteristics", "Consumption", and "FCT" respectively.
 
 Each worksheet has the initial three columns labeled "j", "t", and
 "m"; together these identify an observation uniquely.  The column "j"
@@ -54,7 +54,7 @@ Beyond the first three columns, the "Household Characteristics" should
 have columns corresponding to different elements of the vector of
 observable characteristics $z$.  If the data allow, I recommend
 constructing observables that match what I have in the ICRISAT data:
-namely numbers of "Men", "Women", "Boys" and "Girls"; also the
+namely numbers of different children by age and sex, along with the
 logarithm of total household size ("log HSize").
 
 ** From Sheet to DataFrame to Result Object
@@ -78,19 +78,30 @@ import sys
 from eep153_tools import read_sheets
 
 #### Need private keys from json file (we're authenticating using "service accounts")
-#!gpg --batch --passphrase "SECRET PASSPHRASE" -d ../students-9093fa174318.json.gpg > ../students-9093fa174318.json
+#!gpg --batch --passphrase "SECRET PASSPHRASE" -d ../students.json.gpg > ../students.json
 ####
 
 # Add credentials if sheet not meant to be public
-x = read_sheets(ICRISAT_Data,sheet='Expenditures',json_creds='../students-9093fa174318.json')
+x = read_sheets(ICRISAT_Data,sheet='Expenditures',json_creds='../students.json')
+x.columns.name = 'i'
                  
 # Change 'ICRISAT' to key of your own sheet in Sheets, above
-z = read_sheets(ICRISAT_Data,sheet="HH Characteristics",json_creds='../students-9093fa174318.json')
+z = read_sheets(ICRISAT_Data,sheet="HH Characteristics",json_creds='../students.json')
+z.columns.name = 'k'
+
+p = read_sheets(ICRISAT_Data,sheet="Prices",json_creds='../students.json')
+p.columns.name = 'i'
+
 
 # Assume a single market: (Comment this out to make each village its own market)
 z['m'] = 1
 x['m'] = 1
+p['m'] = 1
 
+p = p.set_index(['t','m','u'])
+
+# x may have duplicate columns
+x = x.groupby('i',axis=1).sum()
 x = x.replace(0,np.nan) # Replace zeros with missing
 
 # Take logs of expenditures; call this y
@@ -119,7 +130,7 @@ happens in two steps.  The first is the "reduced form" step:
 #+begin_src ipython  :results silent :tangle estimation_example.py
 import cfe
 
-result = cfe.Result(y=y,z=z)
+result = cfe.Result(y=y,z=z,prices=p)
 #+end_src
 
 This creates a complicated "Result" object, with lots of different
