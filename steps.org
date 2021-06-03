@@ -175,11 +175,12 @@ estimate the probability with which we'll observe zero expenditures
 as a function of \lambda, prices, and household characteristics.
 
 #+begin_src ipython :tangle /tmp/foo.py
+import numpy as np
 import matplotlib.pyplot as plt
 %matplotlib inline
 import matplotlib.cm as cm
 
-zeros_r = cfe.Result(y=(0.+(result.y>0)),z=result.z)
+zeros_r = cfe.Result(y=(0.+(np.exp(result.y)>0)),z=result.z)
 weights = zeros_r.get_predicted_log_expenditures()
 
 # Truncate to make weights live in [0,1]
