@@ -25,6 +25,7 @@ py.init_notebook_mode(connected=True)
 
    [[http://datahub.berkeley.edu/user-redirect/interact?account=ligon&repo=FoodDemand.git&branch=master&path][FoodDemand in datahub]]
 ** Questions
+
    - How do actual diets compare with minimum cost diets?
    - How can changes in food prices affect demand for different kinds
      of food?
@@ -189,12 +190,13 @@ from cfe import demands
 py.init_notebook_mode(connected=True)
 
 ########### Play with these parameters
-alpha=[0.3,0.7] # Preference parameters
-beta=[1,1] # Curvature parameters
+parms = {'alpha':[0.3,0.7], # Preference parameters
+         'beta':[1,1], # Curvature parameters
+         'phi':0}
 
 ####################
 
-U = lambda c: demands.utility(c,alpha,beta,0)
+U = lambda c: demands.utility(c,**parms)
 
 # Prices of goods
 p = (1,2)
@@ -207,7 +209,7 @@ c2 = np.linspace(0.1, x/p[1]*1.2, 30)
 
 Utils = np.array([[U([c_1,c_2]) for c_1 in c1] for c_2 in c2])
 
-Ustar =  demands.marshallian.indirect_utility(x,p,alpha,1,0)
+Ustar =  demands.marshallian.indirect_utility(x,p,parms)
 
 xs = [0,x/p[0],0,x/p[0]]
 ys = [x/p[1],0,x/p[1],0]
@@ -281,10 +283,8 @@ from cfe.demands import marshallian
 import numpy as np
 import matplotlib.pyplot as plt
 
-alpha=[0.3,0.7] # Preference parameters
-
 # Demand for c_1 as a function of own price
-D1 = lambda p1,p2=1,x=1: marshallian.demands(x,(p1,p2),alpha,1,0)[0]
+D1 = lambda p1,p2=1,x=1: marshallian.demands(x,(p1,p2),parms)[0]
 
 P = np.linspace(.5,5,20)
 
@@ -313,10 +313,8 @@ from cfe.demands import marshallian
 import numpy as np
 import matplotlib.pyplot as plt
 
-alpha=[0.3,0.7] # Preference parameters
-
 # Demand for c_1 as a function of own price
-E1 = lambda x,p1=1,p2=1: marshallian.demands(x,(p1,p2),alpha,1,0)
+E1 = lambda x,p1=1,p2=1: marshallian.demands(x,(p1,p2),parms)
 
 X = np.linspace(.1,10,20)
 
@@ -354,12 +352,13 @@ plt.show()
 from cfe import demands
 
 ########### Play with these parameters
-alpha=[0.3,0.7] # Preference parameters
-beta=[5,1] # Curvature parameters
+parms = {'alpha':[0.3,0.7], # Preference parameters
+         'beta':[5,1], # Curvature parameters
+         'phi':0}
 
 ####################
 
-U = lambda c: demands.utility(c,alpha,beta,0)
+U = lambda c: demands.utility(c,**parms)
 #+end_src
 
 #+results:
@@ -417,7 +416,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Demand for c_1 as a function of own price
-D1 = lambda p1,p2=1,x=1: marshallian.demands(x,(p1,p2),alpha,beta,0)[0]
+D1 = lambda p1,p2=1,x=1: marshallian.demands(x,(p1,p2),parms)[0]
 
 P = np.linspace(.5,5,20)
 
@@ -452,7 +451,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Demand for c_1 as a function of own price
-E1 = lambda x,p1=1,p2=1: marshallian.demands(x,(p1,p2),alpha,beta,0)
+E1 = lambda x,p1=1,p2=1: marshallian.demands(x,(p1,p2),parms)
 
 X = np.linspace(.1,10,20)
 
