@@ -1,9 +1,7 @@
 * Preface
 If need be...
 #+begin_src ipython
-!pip install CFEDemands
-!pip install oauth2client
-!pip install dvc
+!pip install -r requirements.txt
 #+end_src
 
 * Introduction
@@ -48,16 +46,17 @@ InputFiles = {'Expenditures':('1ySP8lrXlQ2ChaMdz0HQY85Md65cRRKOZgz-T0zBN2K0','Ex
 #+end_src
 
 Note that the food items for the FCT for Niger are *not* yet matched
-up with food labels indexed by =i= in the expenditure and consumption datasets.
+up ("harmonized") with food labels indexed by =i= in the expenditure
+and consumption datasets.
 
 #+begin_src ipython :tangle /tmp/foo.py
-from eep153_tools import read_sheets
+from eep153_tools.sheets import read_sheets
 import numpy as np
 import pandas as pd
 
-def get_clean_sheet(key,json_creds,sheet=None):
+def get_clean_sheet(key,sheet=None):
 
-    df = read_sheets(key,json_creds,sheet)
+    df = read_sheets(key,sheet=sheet)
     df.columns = [c.strip() for c in df.columns.tolist()]
 
     df = df.loc[:,~df.columns.duplicated(keep='first')]   
@@ -70,7 +69,6 @@ def get_clean_sheet(key,json_creds,sheet=None):
 
 # Get expenditures...
 x = get_clean_sheet(InputFiles['Expenditures'][0],
-                    json_creds='../students-9093fa174318.json',
                     sheet=InputFiles['Expenditures'][1])
 
 if 'm' not in x.columns:
@@ -84,7 +82,6 @@ x = x.replace(0,np.nan)
 
 # Get HH characteristics...
 z = get_clean_sheet(InputFiles['HH Characteristics'][0],
-                    json_creds='../students-9093fa174318.json',
                     sheet=InputFiles['HH Characteristics'][1])
 
 if 'm' not in z.columns:
@@ -97,7 +94,6 @@ z = z.apply(lambda x: pd.to_numeric(x,errors='coerce'))
 
 # Get purchased consumption quantities
 q = get_clean_sheet(InputFiles['Consumption'][0],
-                    json_creds='../students-9093fa174318.json',
                     sheet=InputFiles['Consumption'][1])
 
 if 'm' not in q.columns:
@@ -110,7 +106,6 @@ q = q.apply(lambda x: pd.to_numeric(x,errors='coerce'))
 q = q.replace(0,np.nan)
 
 fct = get_clean_sheet(InputFiles['FCT'][0],
-                    json_creds='../students-9093fa174318.json',
                     sheet=InputFiles['FCT'][1])
 
 #### This bit peculiar to Niger FCT #####
@@ -133,10 +128,10 @@ import cfe
 
 result = cfe.Result(y=np.log(x),z=z)
 
-# Estimates most things (not counting std errors for betas).
-xhat = result.get_predicted_expenditures() 
-
 result.get_beta(as_df=True).sort_values(ascending=False) # Check sanity...
+
+# Make this persistent...
+result.to_dataset('./foo.ds')
 #+end_src
 
 
@@ -147,24 +142,42 @@ prices, then choose prices corresponding to some units (e.g.,
 kilograms) we can map into the  FCT.
 
 #+begin_src ipython :tangle /tmp/foo.py
+import cfe
+
+result = cfe.from_dataset('foo.ds')  # Get persistent result saved above...
+
+xhat = result.get_predicted_expenditures() 
 
 # xhat is an xarray; change to df
 xhatdf = xhat.to_dataset('i').to_dataframe()
 xhatdf.columns.name ='i'
 
-# Keep kgs; g
-phat = phat.xs('kg',level='u').groupby(['t','m']).median().dropna(how='all')
+phat = xhatdf/q  # Expenditures divided by quantities gives prices...
+phat
+#+end_src
+
+Note that =phat= gives prices for different /quantities/.  If prices
+differ *only* because of quantities (e.g., one deciliter costs one
+tenth as much as a liter), then we can use these differences in prices
+to convert between different units, even if the units (e.g., "basket")
+is otherwise unclear.  
+
+If we have enough data on purchases in kilograms, just keep those
+prices (otherwise choose some other useful unit).  We also assume
+prices are the same for everyone, so just take median.
+#+begin_src ipython :tangle /tmp/foo.py
+
+# Keep kgs
+phat = phat.xs('kg',level='u').groupby(['t','m']).median().T.dropna(how='all')
 #+end_src
 
 Keep prices in result...
 #+begin_src ipython
-result['prices'] = phat.stack().to_xarray()
+result['prices'] = phat.stack().to_xarray().to_array()
 
-# Make this persistent...
-result.to_dataset('./foo.ds')
 #+end_src
 
-* Step 4: Predicting Positive Consumption                        
+* Step 4: Predicting Positive Consumption                       
 An issue with our assessment of fit is that we /predicted/ that every
 household would consume positive quantitites of every good, and in
 making our assessment we ignored the (many) cases in which in fact the
@@ -179,6 +192,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 %matplotlib inline
 import matplotlib.cm as cm
+import cfe
 
 zeros_r = cfe.Result(y=(0.+(np.exp(result.y)>0)),z=result.z)
 weights = zeros_r.get_predicted_log_expenditures()
@@ -212,7 +226,7 @@ quantities, and put back into a dataframe.
 xhatdf = xhat.to_dataset('i').to_dataframe()
 xhatdf.columns.name ='i'
 
-qhat = xhatdf.div(phat,axis=1)
+qhat = xhatdf.div(phat.T,axis=1)
 
 qhat
 #+end_src
@@ -320,8 +334,6 @@ nutrients = myq@myfct
 nutrients.mean()    # NB: Nutrients are for past /week/ for entire household.
 #+end_src
 
-
-
 * Step 7: Define Nutrient Demands
   Define a convenience function to easily change one price at a time...
 #+begin_src ipython :results silent
@@ -344,4 +356,18 @@ def nutrient_demand(x,p):
     return N
 #+end_src
 
+* Step 8: Counterfactual experiments
 
+With our estimated nutrient demand system, what happens to nutritional
+outcomes if, say, all prices were to be scaled up or down?
+#+begin_src ipython
+import numpy as np
+import matplotlib.pyplot as plt
+
+scale = np.linspace(.5,2,20)
+xbar = xhat.sel(t=result.firstround).replace(0,np.nan).sum('i').median()
+pbar = r.prices.sel(t=r.firstround)
+
+plt.plot(scale,[nutrient_demand(xbar,pbar*s) for s in scale])
+
+#+end_src

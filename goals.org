@@ -74,12 +74,6 @@ real-world population.
    their own recommendations, which may be better suited to their
    populations.
 
-** (B) "Engel's Law" 
-   Engel is famous for the proposition that the share of food in a
-   household's budget falls with the overall size of the budget.  What
-   can you say about the validity of Engel's Law in the context of
-   your population?
-
 ** (B) Nutritional adequacy of diet
    Given the food actually consumed in your data, what can you say
    about the adequacy of the diets in the population you're studying?
