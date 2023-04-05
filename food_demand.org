@@ -380,5 +380,32 @@ plt.show()
 
 #+results:
 
-***** Questions
-1. How do the Engel curves depend on prices?
+**** Final Questions for your team
+Suppose there are three or more goods
+#+begin_src jupyter-python
+import consumerdemands as demands
+
+########### Play with these parameters
+parms = {'alpha':[0.2,0.7,0.1], # Preference parameters
+         'beta':[.5,.75,1.5], # Curvature parameters
+         'phi':0}
+
+####################
+#+end_src
+
+You can play with the utility function
+#+begin_src jupyter-python
+U = lambda c: demands.utility(c,**parms)
+#+end_src
+1. What is the level of utility if prices are all equal to one, and income is equal to one?  What happens if income doubles?
+
+2. Write code to calculate the Marshallian demands.  If all prices are equal to one, and income is equal to one, then how much is demanded of each good?
+
+3. If the price of good one changes, what happens to the demand for all three goods?
+
+4. Marshallian (uncompensated) demands depend on prices and income; Hicksian (compensated) demands depend on prices and the level of utility.  Here's how you can define hicksian demand schedules:
+
+#+begin_src jupyter-python
+from consumerdemands import hicksian
+h =  hicksian.demands(x,(p1,p2),parms)
+#end_src

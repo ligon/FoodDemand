@@ -1,12 +1,12 @@
-#+PROPERTY: header-args:ipython :tangle estimation_example.py
+#+PROPERTY: header-args:jupyter-python :tangle estimation_example.py
 
 In this document we'll work through a simple approach to estimating
 Constant Frisch Elasticity (CFE) demand systems.
 
 There are two prerequisites; the first is the =CFEDemands= python
-module, which can be installed with a simple:
-#+begin_src ipython :tangle no
-!pip install -r requirements.txt
+module.  You may have this already, but if not it  can be installed with a simple:
+#+begin_src jupyter-python :tangle no
+#!pip install -r requirements.txt
 #+end_src
 
 The second prerequisite is a dataset including detailed information on
@@ -18,189 +18,171 @@ dataset is detailed in the next section.
 Consider the case in which the data are saved in a google sheet; we'll
 turn data from these into =pandas= dataframes.  
 There are limits on the allowable size of google sheets (5 million
-cells), so if your dataset is larger than this you'll need some other
+cells when I last checked), so if your dataset is larger than this you'll need some other
 mechanism to get your data into such dataframes.  Even in this latter
 case you'll want your dataframes to have a structure that matches the
 description given below.
 
 ** Structure of the Spreadsheet
 
-An example spreadsheet can be found at
-https://docs.google.com/spreadsheets/d/13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo/.
+An example spreadsheet with data for Uganda can be found at
+https://docs.google.com/spreadsheets/d/1yVLriVpo7KGUXvR3hq_n53XpXlD5NmLaH1oOMZyV0gQ/
 
-This spreadsheet consists of three worksheets, labeled "Expenditures",
-"Household Characteristics", "Consumption", and "FCT" respectively.
+This spreadsheet consists of three worksheets, labeled "RDI", "FCT",
+"Household Characteristics", "Prices", and a series of different years of food "Expenditures".
 
-Each worksheet has the initial three columns labeled "j", "t", and
-"m"; together these identify an observation uniquely.  The column "j"
+Each worksheet has the initial three columns labeled "i", "t", and
+"m"; together these identify an observation uniquely.  The column "i"
 should include a household id; the column "t" should include an
 indicator for the year or period (for those of you with
 cross-sectional data these will all take a common value, e.g., 2019);
 the column "m" should be an indicator of "market", which may be a
 region identifier, or may take a single value (e.g., "Malawi").
 
-The triple (j,t,m) will serve as the index of some constructed
+The triple (i,t,m) will serve as the index of some constructed
 dataframes.  It is important not to have *too* many different values
-for "m" (unless you have lots of RAM to play with).
+for "m" (unless you have lots of data and RAM to play with).
 
-Beyond the first three columns, the "Expenditures" worksheet should
-have one column for each category of expenditures (e.g., "Rice", "Goat
-meat", "Millet",...).
+Beyond the first three columns, the "Expenditures" worksheet for a given year should
+have one column for each category of expenditures (e.g., "Beans", "Beef", "Beer",...).
 
 Beyond the first three columns, the "Household Characteristics" should
 have columns corresponding to different elements of the vector of
 observable characteristics $z$.  If the data allow, I recommend
-constructing observables that match what I have in the ICRISAT data:
+constructing observables that match what I have in these data:
 namely numbers of different children by age and sex, along with the
 logarithm of total household size ("log HSize").
 
 ** From Sheet to DataFrame to Result Object
 
 We begin by defining a dictionary that contains the spreadsheet key. 
-One is provided for the Indian ICRISAT example that I wish to work
+One is provided for the Ugandan example that I wish to work
 through. 
-#+begin_src ipython :results silent  :tangle estimation_example.py
-ICRISAT_Data = '13Ig5hZif-NSHtgkKRp_cEgKXk0lOsdUB2BAD6O_FnRo' 
+#+begin_src jupyter-python :results silent  :tangle estimation_example.py
+Uganda_Data = '1yVLriVpo7KGUXvR3hq_n53XpXlD5NmLaH1oOMZyV0gQ'
 #+end_src
 
 With the spreadsheet defined , grab it and define a couple of
 dataframes. (Sheets should be shared with =students@eep153.iam.gserviceaccount.com=):
 
-#+begin_src ipython :results silent  :tangle estimation_example.py
+#+begin_src jupyter-python :results silent  :tangle estimation_example.py
 import pandas as pd
 import numpy as np
-import sys
 from eep153_tools.sheets import read_sheets
 
-x = read_sheets(ICRISAT_Data,sheet='Expenditures')
-x.columns.name = 'i'
+x = read_sheets(Uganda_Data,sheet='Expenditures (2019-20)')
+x.columns.name = 'j'
                  
-# Change 'ICRISAT' to key of your own sheet in Sheets, above
-z = read_sheets(ICRISAT_Data,sheet="HH Characteristics")
-z.columns.name = 'k'
-
-# Assume a single market: (Comment this out to make each village its own market)
-z['m'] = 1
-x['m'] = 1
+# Change 'Uganda' to key of your own sheet in Sheets, above
+d = read_sheets(Uganda_Data,sheet="HH Characteristics")
+d.columns.name = 'k'
 
 # x may have duplicate columns
-x = x.groupby('i',axis=1).sum()
+x = x.groupby('j',axis=1).sum()
 x = x.replace(0,np.nan) # Replace zeros with missing
 
 # Take logs of expenditures; call this y
-y = np.log(x.set_index(['j','t','m']))
+y = np.log(x.set_index(['i','t','m']))
 
-z.set_index(['j','t','m'],inplace=True)
+d.set_index(['i','t','m'],inplace=True)
 #+end_src
 
-This gives a dataframe of household characteristics $z$ with a simple structure.
+This gives a dataframe of household characteristics $d$ with a simple structure.
 
-#+begin_src ipython :tangle no
-z.head()
+#+begin_src jupyter-python :tangle no
+d.head()
 #+end_src
 
 Also a dataframe of log expenditures $y$ with a similarly simple
 structure.  Note that any expenditures of zero are dropped and
 replaced with a missing value indicator.
-#+begin_src ipython :tangle no
+#+begin_src jupyter-python :tangle no
 y.head()
+#+end_src
+There may be some goods that very few people consume---too few to estimate demand reliably.   We have code to deal with this.  You can play with the =min_obs= parameter---the larger it is, the more foods will be dropped.
+#+begin_src jupyter-python   :tangle estimation_example.py
+from cfe.estimation import drop_columns_wo_covariance
+
+y = drop_columns_wo_covariance(y,min_obs=30)
+#+end_src
+Now, we want the $d$ and $y$ dataframes to have rows that line up:
+#+begin_src jupyter-python   :tangle estimation_example.py
+use = y.index.intersection(d.index)
+y = y.loc[use,:]
+d = d.loc[use,:]
 #+end_src
 
 * Estimation
-With nothing more than this, we can estimate the demand system.  This
-happens in two steps.  The first is the "reduced form" step:
-
-#+begin_src ipython  :results silent :tangle estimation_example.py
-import cfe
-
-result = cfe.Result(y=y,z=z)
-#+end_src
-
-This creates a complicated "Result" object, with lots of different
-attributes.  Note from below that attributes $y$ and $z$ are now defined.
-
-#+begin_src ipython :tangle no
-result
-#+end_src
-
-** First step of Estimation
-
-Recall that there are two steps to estimation; the first step
-involves estimating the "reduced form" linear regression 
+Let $y_{i}^j$ be log expenditures on food $j$ by household $i$ at a particular time.  We want to estimate a regression that takes the form
 \[
-y_{it}^j = {a}_{it} + \delta_i'{z}^j_t + \epsilon_{it}^j.
+      y^j_{i} = A^j(p) + \gamma_j'd_i + \beta_j w_i + \zeta^j_i.
 \]
+So, a first step is to turn our dataframe for =y= into a series, so we can put it on the left-hand side of this regression.  Then we need to make our dataframe $d$ conform:
+#+begin_src jupyter-python  :results silent :tangle estimation_example.py
+y = y.stack()
 
-The Result class has code to estimate this in one line:
-#+begin_src ipython  :results silent
-result.get_reduced_form()
+d = d.stack()
+
+# Check that indices are in right places!
+assert y.index.names == ['i','t','m','j']
+assert d.index.names == ['i','t','m','k']
 #+end_src
 
-After running this we can examine the estimated coefficients $\delta$:
-#+begin_src ipython
-result.delta.to_dataframe().unstack('k')
+
+** Basic Estimation
+
+Just one line to set up the regression:
+#+begin_src jupyter-python   :tangle estimation_example.py
+from cfe import Regression
+
+result = Regression(y=y,d=d)
 #+end_src
 
-Also the good-time constants $a_{it}$ (this captures the effects of prices)
-#+begin_src ipython
-result.a.to_dataframe().unstack('i')
+And then one line to predict expenditures and estimate most of the things we need:
+#+begin_src jupyter-python
+result.predicted_expenditures()
 #+end_src
 
-** Second step of Estimation
-
-The second step involves using Singular Value Decomposition to find
-the rank one matrix that best approximates the residuals $e_{it}^j$.
-This can be interpreted as
-\[
-    -\beta_i\log\lambda^j_t,
-\]
-where the $\log\lambda^j_t$ is the log of the marginal utility of
-expenditures (MUE) for household $j$ at time $t$, and where $\beta_i$ are
-the corresponding "Frisch elasticities" that tell us how much
-demand changes as the MUE falls.
-
-Estimates can also be computed as a one-liner:
-#+begin_src ipython  
-result.get_beta(as_df=True)
+Now we can compare predicted log expenditures with actual:
+#+begin_src jupyter-python
+%matplotlib notebook
+df = pd.DataFrame({'y':y,'yhat':result.get_predicted_log_expenditures()})
+df.plot.scatter(x='yhat',y='y')
 #+end_src
 
 That's all there is to estimation!  Note that we didn't estimate
 demands for all goods---lots of goods didn't have enough observations,
-and were automatically dropped.  (This can be controlled using the
-=min_proportion_items= and =min_xproducts= attributes when one
-instantiates the result object.)
-
-** Assessment of Fit
-Now, let's see how we did, by comparing total expenditures predicted by the
-model we've estimated with actual total expenditures:
-
-#+begin_src ipython :tangle no
-%matplotlib inline
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-
-xbar = np.exp(result.y).sum(['m','i']).to_dataframe('xbar').replace(0,np.nan).squeeze()
-xhat = result.get_predicted_expenditures().sum(['m','i']).to_dataframe('xhat').replace(0,np.nan).squeeze()
-
-# Make dataframe of actual & predicted
-df = pd.DataFrame({'Actual':np.log(xbar),'Predicted':np.log(xhat)})
-
-df.plot.scatter(x='Predicted',y='Actual')
-
-# Add 45 degree line
-v = plt.axis()
-vmin = np.max([v[0],v[2]])
-vmax = np.max([v[1],v[3]])
-plt.plot([vmin,vmax],[vmin,vmax])
+and were automatically dropped.
+** Parameters
+*** (Relative) Income Elasticity
+Some of the parameters have an interesting interpretation.  First among these are the $\beta$ coefficients, which govern how /income elastic/ different goods are (higher values means more elastic).  These are also called /Frisch elasticities/.
+#+begin_src jupyter-python
+result.get_beta().sort_values()
 #+end_src
+
+Here we use a plot to visualize, with confidence intervals.
+#+begin_src jupyter-python
+result.graph_beta()
+#+end_src
+*** Demand and Household Composition
+We're particularly interested in the effects of household composition on demand.  These are captured by the $\gamma_j$ parameters in the regression.
+#+begin_src jupyter-python
+result.gamma
+#+end_src
+
 
 ** Saving Result
 You can save the estimated result, using something like
-#+begin_src ipython
-result.to_dataset('icrisat.ds')
+#+begin_src jupyter-python
+result.to_pickle('my_estimates.pickle')
 
 #+end_src
 
+You can subsequently load this using
+#+begin_src jupyter-python
+import cfe
+result = cfe.regression.read_pickle('my_estimates.pickle')
+#+end_src
 
 ** Predicting Positive Consumption                                 :noexport:
 An issue with our assessment of fit is that we /predicted/ that every
@@ -212,7 +194,7 @@ Here we're going to go back and use similar framework to try and
 estimate the probability with which we'll observe zero expenditures
 as a function of \lambda, prices, and household characteristics.
 
-#+begin_src ipython :tangle no
+#+begin_src jupyter-python :tangle no
 import matplotlib.pyplot as plt
 %matplotlib inline
 import matplotlib.cm as cm
@@ -223,10 +205,10 @@ weights = zeros_r.get_predicted_log_expenditures()
 # Truncate to make weights live in [0,1]
 weights = weights.where((weights<1) + np.isnan(weights),1).where((weights>0) + np.isnan(weights),0)
 
-xbar = np.exp(result.y).sum(['m','i']).to_dataframe('xbar').replace(0,np.nan).squeeze()
+xbar = np.exp(result.y).sum(['m','j']).to_dataframe('xbar').replace(0,np.nan).squeeze()
 
 # Calculate *expected* predicted expenditures, to make unconditional on being positive
-xhat = (weights*result.get_predicted_expenditures()).sum(['m','i']).to_dataframe('xhat').replace(0,np.nan).squeeze()
+xhat = (weights*result.get_predicted_expenditures()).sum(['m','j']).to_dataframe('xhat').replace(0,np.nan).squeeze()
 
 # Make dataframe of actual & predicted
 df = pd.DataFrame({'Actual':np.log(xbar),'Predicted':np.log(xhat)})
