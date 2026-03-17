@@ -1,0 +1,186 @@
+:SETUP:
+#+title: Consumer Demand for Food
+#+author: Ethan Ligon
+#+email: ligon@berkeley.edu
+#+date: Spring 2026
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [presentation,t]
+#+BEAMER_THEME: Madrid
+#+options: ':t *:t -:t ::t <:t H:2 \n:nil ^:nil arch:headline author:t
+#+options: broken-links:nil c:nil creator:nil d:(not "LOGBOOK")
+#+options: date:t e:t email:nil f:t inline:t num:t p:nil pri:nil
+#+options: prop:nil stat:t tags:t tasks:t tex:t timestamp:t title:t
+#+options: toc:nil todo:t |:t
+#+LATEX_HEADER: \usepackage{booktabs}
+:END:
+
+* Where We've Been, Where We're Going
+** From Minimum Cost to Actual Choices
+- In Project 2 we asked: what /should/ people eat?
+  - Find the cheapest diet meeting nutritional requirements.
+- In Project 3 we ask: what /do/ people eat?
+  - And how do their choices respond to prices and income?
+
+** Key Questions
+- How do actual diets compare with minimum cost diets?
+- How do changes in food prices affect what people eat?
+- How do changes in income affect what people eat?
+- Can prices and incomes ensure people choose nutritious diets?
+
+* The Consumer's Problem
+** Consumers Make Choices
+Most of us do not solve a linear program at the grocery store.  Instead:
+- We have a /budget/ --- how much we can spend.
+- We face /prices/ --- what each food costs.
+- We have /preferences/ --- what we like to eat.
+
+The consumer's problem: choose the /best/ bundle of goods you can afford.
+
+** An Everyday Example
+Suppose you have $10 for lunch.  You can buy:
+- Burritos at $5 each
+- Salads at $4 each
+
+What do you choose?  It depends on how much you /like/ each option relative to its price.
+
+** Making This Precise
+Economists write the consumer's problem as:
+\[
+  \max_{c} U(c) \quad \text{subject to} \quad p'c \leq x
+\]
+
+- \(c\) :: the /consumption bundle/ (quantities of each food)
+- \(p\) :: the /price vector/ (price per unit of each food)
+- \(x\) :: the /budget/ (total money available)
+- \(U(c)\) :: /utility/ --- a number measuring how satisfied you are
+
+** What Is Utility?
+- A way to /rank/ bundles: if \(U(A) > U(B)\), you prefer bundle \(A\).
+- Not a measure of "happiness units" --- only the ranking matters.
+- We assume utility is:
+  - /Increasing/ --- more food (weakly) preferred to less.
+  - /Concave/ --- variety is good; diminishing returns to any single food.
+
+* Indifference Curves and Budget Lines
+** Indifference Curves
+An /indifference curve/ connects all bundles that give the same utility.
+
+- Every point on the curve is equally good.
+- Curves further from the origin are better.
+- Curves never cross (why?).
+
+** The Budget Line
+The budget line shows all bundles that exactly exhaust your budget:
+\[
+  p_1 c_1 + p_2 c_2 = x
+\]
+
+- Slope :: \(-p_1/p_2\) --- the rate at which the market lets you trade one good for another.
+- Intercepts :: \(x/p_1\) on the \(c_1\) axis, \(x/p_2\) on the \(c_2\) axis.
+
+** Finding the Best Choice
+The consumer picks the bundle on the /highest/ indifference curve that still touches the budget line.
+
+At the optimum, the indifference curve is /tangent/ to the budget line:
+\[
+  \frac{MU_1}{MU_2} = \frac{p_1}{p_2}
+\]
+
+- Left side :: your /marginal rate of substitution/ (MRS) --- how much \(c_2\) you'd give up for one more unit of \(c_1\).
+- Right side :: the /price ratio/ --- how much \(c_2\) the market requires you to give up.
+
+* A Concrete Example: Cobb-Douglas
+** Cobb-Douglas Utility
+A simple and widely-used functional form:
+\[
+  U(c_1, c_2) = \alpha_1 \log c_1 + \alpha_2 \log c_2
+\]
+
+- \(\alpha_1, \alpha_2 > 0\) measure relative preference for each good.
+- The \(\log\) gives diminishing marginal utility --- eating 10 burritos is not 10 times as good as eating 1.
+
+** Demands Under Cobb-Douglas
+Solving the consumer's problem yields a clean result:
+\[
+  c_i^{*} = \frac{\alpha_i}{\alpha_1 + \alpha_2} \cdot \frac{x}{p_i}
+\]
+
+Each good gets a /fixed share/ of the budget.
+
+Example: if \(\alpha_1 = 0.3\) and \(\alpha_2 = 0.7\), then 30% of income goes to good 1 and 70% to good 2, no matter what prices are.
+
+** Is Constant Budget Shares Realistic?
+Think about your own spending as income rises:
+- Do you spend the same /fraction/ on rice? On restaurant meals?
+- Probably not --- this is a limitation of Cobb-Douglas.
+- We'll need richer models for the project.
+
+* Demand Curves and Engel Curves
+** Demand Curves
+Fix income and all other prices.  Vary \(p_1\):
+
+- As \(p_1\) rises, you buy less of good 1 (usually).
+- The plot of \(c_1^{*}\) against \(p_1\) is the /demand curve/.
+- Convention (blame Alfred & Mary Paley Marshall): price on the vertical axis!
+
+** What Shifts a Demand Curve?
+The demand curve for good 1 shifts when:
+- /Income/ changes --- you can afford more or less.
+- /Other prices/ change --- substitutes become cheaper or more expensive.
+- /Preferences/ change --- new information about health, taste, etc.
+
+** Engel Curves
+Fix all prices.  Vary the budget \(x\):
+
+- The plot of \(c_i^{*}\) against \(x\) is the /Engel curve/ (named for Ernst Engel, one of your P3 team names!).
+Normal goods have demand that rises with income.  /Inferior goods/ have demand that falls with income (e.g., instant noodles).
+
+** Engel's Law
+Ernst Engel (1857) observed: as income rises, the /share/ of spending on food falls.
+
+This is one of the most robust empirical findings in economics:
+- Poor households spend 50--80% of income on food.
+- Rich households may spend 10--15%.
+- This has big implications for how price changes affect welfare.
+
+* Beyond Cobb-Douglas
+** Why We Need More Flexible Models
+Cobb-Douglas forces constant budget shares.  Real data shows:
+- Budget shares change with income (Engel's Law).
+- Some goods are substitutes; others are complements.
+- Responses to price changes differ across foods.
+
+** Constant Frisch Elasticity (CFE) Utility
+A more flexible form:
+\[
+  U(c) = \sum_{i=1}^{n} \alpha_i \frac{\beta_i}{\beta_i - 1}\left(c_i^{1-1/\beta_i} - 1\right)
+\]
+
+- \(\alpha_i\) still governs relative importance of each good.
+- \(\beta_i\) controls the /curvature/ --- how quickly marginal utility diminishes.
+- When all \(\beta_i = 1\), this reduces to Cobb-Douglas.
+
+** What Changes?
+With different \(\beta_i\) values:
+- Budget shares now depend on prices and income.
+- Engel curves can be nonlinear.
+- Demand curves can have different shapes for different goods.
+
+This is closer to the kind of model you'll estimate in your project.
+
+* Connecting to the Project
+** What Your Team Will Do
+1. Choose a real-world population with expenditure data.
+2. Estimate a demand system --- how food choices respond to prices and income.
+3. Use the estimates for counterfactual experiments:
+   - What if incomes doubled?
+   - What if food prices rose 20%?
+   - Would people still get adequate nutrition?
+
+** From Theory to Data
+Today's theory gives you the framework.  Your project will:
+- Replace the simple 2-good model with many food categories.
+- Use real household survey data instead of hypothetical numbers.
+- Estimate the \(\alpha\) and \(\beta\) parameters from observed choices.
+
+The notebook =food_demand.org= walks through a computed example --- we'll look at that next time.
