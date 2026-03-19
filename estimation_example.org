@@ -1,4 +1,4 @@
-#+PROPERTY: header-args:jupyter-python :tangle estimation_example.py
+#+PROPERTY: header-args:jupyter-python :tangle ../../Materials/Project3/estimation_example.py
 
 In this document we'll work through a simple approach to estimating
 Constant Frisch Elasticity (CFE) demand systems.
@@ -59,7 +59,7 @@ We begin by defining a dictionary that contains the spreadsheet key.
 One is provided for the Ugandan example that I wish to work
 through. 
 #+begin_src jupyter-python :results silent  :tangle estimation_example.py
-Uganda_Data = '1yVLriVpo7KGUXvR3hq_n53XpXlD5NmLaH1oOMZyV0gQ'
+Uganda_Data = '1yFWlP5N7Aowaj6t2roRSFFUC50aFD-RLBGfzGtqLl0w'
 #+end_src
 
 With the spreadsheet defined , grab it and define a couple of
@@ -70,15 +70,15 @@ import pandas as pd
 import numpy as np
 from ligonlibrary.sheets import read_sheets
 
-x = read_sheets(Uganda_Data,sheet='Expenditures (2019-20)')
+x = read_sheets(Uganda_Data,sheet='Food Expenditures (2019-20)').as_type("float")
 x.columns.name = 'j'
                  
 # Change 'Uganda' to key of your own sheet in Sheets, above
-d = read_sheets(Uganda_Data,sheet="HH Characteristics")
+d = read_sheets(Uganda_Data,sheet="Household Characteristics")
 d.columns.name = 'k'
 
 # x may have duplicate columns
-x = x.groupby('j',axis=1).sum()
+x = x.T.groupby('j').sum().T
 x = x.replace(0,np.nan) # Replace zeros with missing
 
 # Take logs of expenditures; call this y

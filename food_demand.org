@@ -221,8 +221,8 @@ P = np.linspace(.5,5,100)
 
 fig,ax = plt.subplots()
 ax.plot([D1(p1) for p1 in P],P)
-ax.xlabel('$c_1$')
-ax.ylabel('$p_1$')
+ax.set_xlabel('$c_1$')
+ax.set_ylabel('$p_1$')
 
 fig.show()
 #+end_src
@@ -249,10 +249,10 @@ X = np.linspace(.1,10,100)
 fig,ax = plt.subplots()
 
 ax.plot(X,[E1(x)[0] for x in X],X,[E1(x)[1] for x in X])
-ax.xlabel('$x$')
-ax.ylabel('Consumptions')
+ax.set_xlabel('$x$')
+ax.set_ylabel('Consumptions')
 ax.legend(('$c_1$','$c_2$'))
-ax.title('Engel Curves')
+ax.set_title('Engel Curves')
 
 fig.show()
 #+end_src

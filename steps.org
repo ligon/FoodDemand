@@ -1,7 +1,9 @@
+#+PROPERTY: header-args:jupyter-python :tangle steps.py
+
 * Preface
 If need be...
 #+begin_src jupyter-python
-!pip install -r requirements.txt
+%pip install -r requirements.txt
 #+end_src
 
 * Introduction
