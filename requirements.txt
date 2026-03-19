@@ -1,3 +1,5 @@
-ipympl
 CFEDemands
 ConsumerDemands
+ligonlibrary
+plotly
+ipympl

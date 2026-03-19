@@ -51,7 +51,7 @@ Note that in some cases not the food items for the FCT (e.g., for Niger) are *no
 consumption and price datasets.
 
 #+begin_src jupyter-python :tangle /tmp/foo.py
-from eep153_tools.sheets import read_sheets
+from ligonlibrary.sheets import read_sheets
 import numpy as np
 import pandas as pd
 

@@ -68,7 +68,7 @@ dataframes. (Sheets should be shared with =students@eep153.iam.gserviceaccount.c
 #+begin_src jupyter-python :results silent  :tangle estimation_example.py
 import pandas as pd
 import numpy as np
-from eep153_tools.sheets import read_sheets
+from ligonlibrary.sheets import read_sheets
 
 x = read_sheets(Uganda_Data,sheet='Expenditures (2019-20)')
 x.columns.name = 'j'
