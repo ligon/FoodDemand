@@ -4,7 +4,7 @@
 
 * Preface
 #+begin_src jupyter-python
-!pip install -r requirements.txt
+%pip install -r requirements.txt
 
 import plotly.offline as py
 import plotly.graph_objs as go
@@ -219,11 +219,12 @@ D1 = lambda p1,p2=1,x=1: marshallian.demands(x,(p1,p2),parms)[0]
 
 P = np.linspace(.5,5,100)
 
-plt.plot([D1(p1) for p1 in P],P)
-plt.xlabel('$c_1$')
-plt.ylabel('$p_1$')
+fig,ax = plt.subplots()
+ax.plot([D1(p1) for p1 in P],P)
+ax.xlabel('$c_1$')
+ax.ylabel('$p_1$')
 
-plt.show()
+fig.show()
 #+end_src
 
 #+results:
@@ -245,13 +246,15 @@ E1 = lambda x,p1=1,p2=1: marshallian.demands(x,(p1,p2),parms)
 
 X = np.linspace(.1,10,100)
 
-plt.plot(X,[E1(x)[0] for x in X],X,[E1(x)[1] for x in X])
-plt.xlabel('$x$')
-plt.ylabel('Consumptions')
-plt.legend(('$c_1$','$c_2$'))
-plt.title('Engel Curves')
+fig,ax = plt.subplots()
 
-plt.show()
+ax.plot(X,[E1(x)[0] for x in X],X,[E1(x)[1] for x in X])
+ax.xlabel('$x$')
+ax.ylabel('Consumptions')
+ax.legend(('$c_1$','$c_2$'))
+ax.title('Engel Curves')
+
+fig.show()
 #+end_src
 
 #+results:
