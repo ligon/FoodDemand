@@ -59,7 +59,6 @@ We begin by defining a dictionary that contains the spreadsheet key.
 One is provided for the Ugandan example that I wish to work
 through. 
 #+begin_src jupyter-python :results silent  :tangle estimation_example.py
-#Uganda_Data = '1yVLriVpo7KGUXvR3hq_n53XpXlD5NmLaH1oOMZyV0gQ'
 Uganda_Data = '1yFWlP5N7Aowaj6t2roRSFFUC50aFD-RLBGfzGtqLl0w'
 #+end_src
 
@@ -103,18 +102,6 @@ replaced with a missing value indicator.
 #+begin_src jupyter-python :tangle no
 y.head()
 #+end_src
-There may be some goods that very few people consume---too few to estimate demand reliably.   We have code to deal with this.  You can play with the =min_obs= parameter---the larger it is, the more foods will be dropped.
-#+begin_src jupyter-python   :tangle estimation_example.py
-from cfe.estimation import drop_columns_wo_covariance
-
-y = drop_columns_wo_covariance(y,min_obs=30)
-#+end_src
-Now, we want the $d$ and $y$ dataframes to have rows that line up:
-#+begin_src jupyter-python   :tangle estimation_example.py
-use = y.index.intersection(d.index)
-y = y.loc[use,:]
-d = d.loc[use,:]
-#+end_src
 
 * Estimation
 Let $y_{i}^j$ be log expenditures on food $j$ by household $i$ at a particular time.  We want to estimate a regression that takes the form
@@ -149,7 +136,7 @@ result.predicted_expenditures()
 
 Now we can compare predicted log expenditures with actual:
 #+begin_src jupyter-python
-%matplotlib notebook
+%matplotlib widget
 df = pd.DataFrame({'y':y,'yhat':result.get_predicted_log_expenditures()})
 df.plot.scatter(x='yhat',y='y')
 #+end_src
