@@ -149,7 +149,7 @@ result.predicted_expenditures()
 
 Now we can compare predicted log expenditures with actual:
 #+begin_src jupyter-python
-%matplotlib notebook
+%matplotlib widget
 df = pd.DataFrame({'y':y,'yhat':result.get_predicted_log_expenditures()})
 df.plot.scatter(x='yhat',y='y')
 #+end_src
