@@ -6,7 +6,7 @@ Constant Frisch Elasticity (CFE) demand systems.
 There are two prerequisites; the first is the =CFEDemands= python
 module.  You may have this already, but if not it  can be installed with a simple:
 #+begin_src jupyter-python :tangle no
-#!pip install -r requirements.txt
+#%pip install -r requirements.txt
 #+end_src
 
 The second prerequisite is a dataset including detailed information on
@@ -59,6 +59,7 @@ We begin by defining a dictionary that contains the spreadsheet key.
 One is provided for the Ugandan example that I wish to work
 through. 
 #+begin_src jupyter-python :results silent  :tangle estimation_example.py
+#Uganda_Data = '1yVLriVpo7KGUXvR3hq_n53XpXlD5NmLaH1oOMZyV0gQ'
 Uganda_Data = '1yFWlP5N7Aowaj6t2roRSFFUC50aFD-RLBGfzGtqLl0w'
 #+end_src
 
